@@ -5,19 +5,30 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:server": "tsx server/index.ts",
+    "dev:all": "concurrently -k \"npm.cmd run dev -- --host 127.0.0.1\" \"npm.cmd run dev:server\"",
     "build": "tsc -b && vite build",
+    "start": "tsx server/index.ts",
     "preview": "vite preview"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "openai": "latest",
     "vite": "latest",
     "typescript": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "lucide-react": "latest"
+    "lucide-react": "latest",
+    "zod": "latest"
   },
   "devDependencies": {
     "@types/react": "latest",
-    "@types/react-dom": "latest"
+    "@types/react-dom": "latest",
+    "@types/express": "latest",
+    "@types/node": "latest",
+    "concurrently": "latest",
+    "tsx": "latest"
   }
 }
