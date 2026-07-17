@@ -50,7 +50,8 @@ async function runModel(input: AnalyzeInput) {
   if (!process.env.OPENAI_API_KEY) return { analysis: fallbackAnalysis(input), source: 'fallback' as const }
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
   const response = await client.responses.create({
-    model: process.env.OPENAI_MODEL || 'gpt-5.6',
+    model: process.env.OPENAI_MODEL || 'gpt-5.6-luna',
+    max_output_tokens: Number(process.env.OPENAI_MAX_OUTPUT_TOKENS || 1600),
     input: [
       { role: 'system', content: [{ type: 'input_text', text: 'You are Friction, a neutral conflict analysis tool for work teams. Use only the supplied text. Do not invent evidence, diagnose people, assign blame, or give legal, medical, or financial advice. Separate claims from values, assumptions, definitions, and unknowns. Represent both perspectives fairly. Prefer a small, testable third option that reduces uncertainty. Return only the requested JSON structure.' }] },
       { role: 'user', content: [{ type: 'input_text', text: promptFor(input) }] },

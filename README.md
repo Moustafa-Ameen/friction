@@ -14,7 +14,7 @@ npm.cmd run dev:all
 
 Open `http://127.0.0.1:5173`.
 
-The app works without an API key using a local fallback analysis. To enable live analysis, set `OPENAI_API_KEY` in `.env` and keep `OPENAI_MODEL=gpt-5.6`. The key is read only by the Express server and is never sent to the browser.
+The app works without an API key using a local fallback analysis. To enable live analysis, set `OPENAI_API_KEY` in `.env` and use `OPENAI_MODEL=gpt-5.6-luna` for the lowest-cost GPT-5.6 variant. Responses are capped at 1,600 output tokens by default. The key is read only by the Express server and is never sent to the browser.
 
 For separate processes, use `npm.cmd run dev` for Vite and `npm.cmd run dev:server` for the analysis server.
 
