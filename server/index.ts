@@ -80,4 +80,9 @@ const distDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../d
 app.use(express.static(distDir))
 app.get('/', (_req, res) => res.sendFile(path.join(distDir, 'index.html')))
 
-app.listen(port, () => console.log(`Friction analysis server listening on http://127.0.0.1:${port}`))
+const server = app.listen(port, () => console.log(`Friction analysis server listening on http://127.0.0.1:${port}`))
+
+const shutdown = () => server.close(() => process.exit(0))
+process.on('SIGINT', shutdown)
+process.on('SIGTERM', shutdown)
+process.stdin.resume()

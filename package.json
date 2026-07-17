@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "dev:server": "tsx server/index.ts",
-    "dev:all": "concurrently -k \"npm.cmd run dev -- --host 127.0.0.1\" \"npm.cmd run dev:server\"",
+    "dev:all": "concurrently -k \"vite --host 127.0.0.1\" \"tsx server/index.ts\"",
     "build": "tsc -b && vite build",
     "start": "tsx server/index.ts",
     "preview": "vite preview"
