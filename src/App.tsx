@@ -5,6 +5,7 @@ import { analysisSchema, type AnalyzeInput, type ConflictAnalysis } from './lib/
 
 type Mode = AnalyzeInput['mode']
 type Source = 'idle' | 'fallback' | 'gpt-5.6'
+type View = 'start' | 'understand' | 'decide'
 
 type Scenario = {
   topic: string
@@ -36,6 +37,7 @@ const scenarios: Record<string, Scenario> = {
 
 function App() {
   const [mode, setMode] = useState<Mode>('perspectives')
+  const [view, setView] = useState<View>('start')
   const [scenarioId, setScenarioId] = useState('launch')
   const [topic, setTopic] = useState(scenarios.launch.topic)
   const [sideA, setSideA] = useState(scenarios.launch.sideA)
@@ -73,9 +75,9 @@ function App() {
       if (!response.ok) throw new Error(body.error || 'Friction could not compile this input.')
       const parsed = analysisSchema.safeParse(body.analysis)
       if (!parsed.success) throw new Error('The analysis response was incomplete. Try again.')
-      setAnalysis(parsed.data); setSource(body.source || 'fallback'); setWarning(body.warning || '')
+      setAnalysis(parsed.data); setSource(body.source || 'fallback'); setWarning(body.warning || ''); setView('understand')
     } catch (requestError) {
-      setAnalysis(fallbackAnalysis(payload)); setSource('fallback')
+      setAnalysis(fallbackAnalysis(payload)); setSource('fallback'); setView('understand')
       setWarning(requestError instanceof Error ? `${requestError.message} Showing local analysis instead.` : 'Showing local analysis instead.')
     } finally {
       setStatus('idle')
@@ -86,7 +88,7 @@ function App() {
     loadScenario('launch')
     setMode('perspectives')
     setAnalysis(fallbackAnalysis({ mode: 'perspectives', decision: '', sideA: '', sideB: '' }))
-    setSource('idle'); setWarning(''); setError(''); setOwner(''); setReviewDate('')
+    setSource('idle'); setWarning(''); setError(''); setOwner(''); setReviewDate(''); setView('start')
   }
 
   const writeToClipboard = async (text: string) => {
@@ -152,35 +154,41 @@ function App() {
           <p className="hero-copy">Friction separates facts from assumptions, reveals what people still share, and finds the next move that can get a decision unstuck.</p>
         </section>
 
+        <nav className="workflow-nav container" aria-label="Friction workflow">
+          <button className={view === 'start' ? 'active' : ''} onClick={() => setView('start')}><span>1</span><strong>Add the disagreement</strong><small>Tell Friction what happened</small></button>
+          <button className={view === 'understand' ? 'active' : ''} onClick={() => setView('understand')} disabled={source === 'idle'}><span>2</span><strong>Understand it</strong><small>See what is really different</small></button>
+          <button className={view === 'decide' ? 'active' : ''} onClick={() => setView('decide')} disabled={source === 'idle'}><span>3</span><strong>Choose a way forward</strong><small>Pressure-test and act</small></button>
+        </nav>
+
         <section className="workspace container">
-          <div className="input-panel panel">
-            <div className="panel-heading"><div><span className="step">01</span><h2>Bring us the friction</h2></div><button className="text-button" onClick={reset}><RotateCcw size={14} /> Reset</button></div>
-            <div className="input-tools"><div className="mode-tabs" role="tablist" aria-label="Conflict input mode"><button className={mode === 'perspectives' ? 'active' : ''} onClick={() => setMode('perspectives')} role="tab" aria-selected={mode === 'perspectives'}>Two perspectives</button><button className={mode === 'transcript' ? 'active' : ''} onClick={() => setMode('transcript')} role="tab" aria-selected={mode === 'transcript'}>Paste conversation</button></div><label className="scenario-select">Sample <select value={scenarioId} onChange={(event) => loadScenario(event.target.value)}><option value="launch">Product launch</option><option value="hiring">Hiring decision</option><option value="scope">Project scope</option></select></label></div>
+          {view === 'start' && <div className="input-panel panel">
+            <div className="panel-heading"><div><span className="step">01</span><h2>What is your team stuck on?</h2></div><button className="text-button" onClick={reset}><RotateCcw size={14} /> Reset</button></div>
+            <div className="input-tools"><div className="mode-tabs" role="tablist" aria-label="How will you explain the disagreement?"><button className={mode === 'perspectives' ? 'active' : ''} onClick={() => setMode('perspectives')} role="tab" aria-selected={mode === 'perspectives'}>Write both sides</button><button className={mode === 'transcript' ? 'active' : ''} onClick={() => setMode('transcript')} role="tab" aria-selected={mode === 'transcript'}>Paste a conversation</button></div><label className="scenario-select">Try an example <select value={scenarioId} onChange={(event) => loadScenario(event.target.value)}><option value="launch">Product launch</option><option value="hiring">Hiring decision</option><option value="scope">Project scope</option></select></label></div>
             <label htmlFor="decision">What is the decision?</label>
             <input id="decision" value={topic} onChange={(event) => setTopic(event.target.value)} maxLength={240} />
-            {mode === 'perspectives' ? <div className="sides-grid"><div className="side-input"><div className="field-label"><span className="side-dot coral-dot" /> Side A</div><textarea aria-label="Side A" value={sideA} onChange={(event) => setSideA(event.target.value)} maxLength={12000} /></div><div className="side-input"><div className="field-label"><span className="side-dot teal-dot" /> Side B</div><textarea aria-label="Side B" value={sideB} onChange={(event) => setSideB(event.target.value)} maxLength={12000} /></div></div> : <div className="side-input transcript-input"><div className="field-label"><span className="side-dot gold-dot" /> Conversation transcript</div><textarea aria-label="Conversation transcript" value={transcript} onChange={(event) => setTranscript(event.target.value)} maxLength={12000} /></div>}
+            {mode === 'perspectives' ? <div className="sides-grid"><div className="side-input"><div className="field-label"><span className="side-dot coral-dot" /> What one person thinks</div><textarea aria-label="What one person thinks" value={sideA} onChange={(event) => setSideA(event.target.value)} maxLength={12000} /></div><div className="side-input"><div className="field-label"><span className="side-dot teal-dot" /> What the other person thinks</div><textarea aria-label="What the other person thinks" value={sideB} onChange={(event) => setSideB(event.target.value)} maxLength={12000} /></div></div> : <div className="side-input transcript-input"><div className="field-label"><span className="side-dot gold-dot" /> Paste the conversation</div><textarea aria-label="Paste the conversation" value={transcript} onChange={(event) => setTranscript(event.target.value)} maxLength={12000} /></div>}
             <button className="analyze-button" onClick={analyze} disabled={status === 'loading'}>{status === 'loading' ? <span className="spinner" /> : <Sparkles size={17} />} {status === 'loading' ? 'Compiling...' : 'Compile the conflict'} {!status && <ArrowRight size={17} />}</button>
             <div className="privacy-note"><LockKeyhole size={13} /> Your text is not stored by Friction.</div>
             {error && <div className="form-error" role="alert"><TriangleAlert size={15} /> {error}</div>}
-          </div>
+          </div>}
 
           {warning && <div className="warning-banner"><TriangleAlert size={15} /><span>{warning}</span></div>}
 
-          <section className="results" aria-live="polite">
-            <div className="results-heading"><div><span className="step">02</span><h2>The conflict, compiled</h2></div><span className="confidence"><span /> {source === 'gpt-5.6' ? 'GPT-5.6 Luna analysis' : source === 'fallback' ? `Local analysis | ${analysis.confidence}% confidence` : 'Demo preview'}</span></div>
+          <section className={`results ${view}`} aria-live="polite">
+            <div className="results-heading"><div><span className="step">{view === 'understand' ? '02' : '03'}</span><h2>{view === 'understand' ? 'Understand the disagreement' : 'Choose a way forward'}</h2></div><span className="confidence"><span /> {source === 'gpt-5.6' ? 'GPT-5.6 Luna analysis' : source === 'fallback' ? `Local analysis | ${analysis.confidence}% confidence` : 'Demo preview'}</span></div>
             <div className="decision-banner"><div><span className="mini-label">DECISION UNDER REVIEW</span><h3>{analysis.decision}</h3></div><div className="decision-icon"><TriangleAlert size={19} /></div></div>
 
-            <div className="sides-grid result-sides">{analysis.perspectives.map((side, index) => <article className="side-card" key={`${side.label}-${index}`}><div className={`card-top ${index === 0 ? 'coral' : 'teal'}`}><span className="side-dot" /><span>{side.label}</span><span className="perspective">PERSPECTIVE</span></div><p>{side.summary}</p><div className="claim-label">What this side is saying</div><ul>{side.claims.map((claim) => <li key={claim}>{claim}</li>)}</ul><div className="priority-row">Protects <strong>{side.priorities.join(' · ')}</strong></div></article>)}</div>
+            <div className="sides-grid result-sides understand-content">{analysis.perspectives.map((side, index) => <article className="side-card" key={`${side.label}-${index}`}><div className={`card-top ${index === 0 ? 'coral' : 'teal'}`}><span className="side-dot" /><span>{side.label}</span><span className="perspective">PERSPECTIVE</span></div><p>{side.summary}</p><div className="claim-label">What this side is saying</div><ul>{side.claims.map((claim) => <li key={claim}>{claim}</li>)}</ul><div className="priority-row">Protects <strong>{side.priorities.join(' · ')}</strong></div></article>)}</div>
 
-            <div className="shared-strip"><div className="shared-title"><span className="shared-icon">∩</span><div><span className="mini-label">WHAT BOTH SIDES SHARE</span><strong>There is more common ground than it feels like.</strong></div></div><div className="shared-items">{analysis.sharedGround.map((item) => <span key={item}>{item}</span>)}</div></div>
+            <div className="shared-strip understand-content"><div className="shared-title"><span className="shared-icon">∩</span><div><span className="mini-label">WHAT BOTH SIDES SHARE</span><strong>There is more common ground than it feels like.</strong></div></div><div className="shared-items">{analysis.sharedGround.map((item) => <span key={item}>{item}</span>)}</div></div>
 
-            <div className="section-heading"><div><span className="step">03</span><h2>Where the friction lives</h2></div><button className="icon-button" title="What do these labels mean?"><CircleHelp size={17} /></button></div>
-            <div className="faultline-grid">{analysis.faultlines.map((line) => <article className={`faultline ${line.type.toLowerCase()}`} key={`${line.type}-${line.title}`}><span className="fault-label">{line.type}</span><h3>{line.title}</h3><p>{line.explanation}</p>{line.missingEvidence && <div className="missing-evidence"><span>Next evidence</span>{line.missingEvidence}</div>}</article>)}</div>
+            <div className="section-heading understand-content"><div><span className="step">03</span><h2>What is actually different?</h2></div><button className="icon-button" title="What do these labels mean?"><CircleHelp size={17} /></button></div>
+            <div className="faultline-grid understand-content">{analysis.faultlines.map((line) => <article className={`faultline ${line.type.toLowerCase()}`} key={`${line.type}-${line.title}`}><span className="fault-label">{line.type}</span><h3>{line.title}</h3><p>{line.explanation}</p>{line.missingEvidence && <div className="missing-evidence"><span>Next evidence</span>{line.missingEvidence}</div>}</article>)}</div>
 
-            <section className="section-heading pressure-heading"><div><span className="step">04</span><h2>Pressure-test the path</h2></div><ShieldAlert size={18} /></section>
-            <section className="red-team-panel"><div className="red-team-intro"><ShieldAlert size={19} /><p>Challenge the plan before the team commits to it.</p></div><div className="pressure-grid"><article><span>Strongest counterargument</span><p>{analysis.redTeam.strongestCounterargument}</p></article><article><span>Hidden assumption</span><p>{analysis.redTeam.hiddenAssumption}</p></article><article><span>Evidence that would change the decision</span><p>{analysis.redTeam.evidenceThatWouldChangeMind}</p></article><article><span>Pre-commitment test</span><p>{analysis.redTeam.preCommitmentTest}</p></article></div></section>
+            <section className="section-heading pressure-heading decide-content"><div><span className="step">03A</span><h2>Pressure-test the plan</h2></div><ShieldAlert size={18} /></section>
+            <section className="red-team-panel decide-content"><div className="red-team-intro"><ShieldAlert size={19} /><p>Challenge the plan before the team commits to it.</p></div><div className="pressure-grid"><article><span>Strongest counterargument</span><p>{analysis.redTeam.strongestCounterargument}</p></article><article><span>Hidden assumption</span><p>{analysis.redTeam.hiddenAssumption}</p></article><article><span>Evidence that would change the decision</span><p>{analysis.redTeam.evidenceThatWouldChangeMind}</p></article><article><span>Pre-commitment test</span><p>{analysis.redTeam.preCommitmentTest}</p></article></div></section>
 
-            <div className="resolution-panel"><div className="resolution-intro"><div className="resolution-icon"><Lightbulb size={21} /></div><div><span className="mini-label">A WAY THROUGH</span><h2>{analysis.resolution.title}</h2><p>{analysis.resolution.rationale}</p></div></div><div className="resolution-steps">{analysis.resolution.steps.map((step, index) => <div className="resolution-step" key={step}><span>{String(index + 1).padStart(2, '0')}</span><strong>{step}</strong></div>)}</div><div className="criteria-block"><span className="mini-label">SUCCESS CRITERIA</span><ul>{analysis.resolution.successCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></div><div className="executor-fields"><label><span><UserRound size={13} /> Decision owner</span><input value={owner} onChange={(event) => setOwner(event.target.value)} placeholder="Who owns the next move?" /></label><label><span><CalendarDays size={13} /> Review date</span><input type="date" value={reviewDate} onChange={(event) => setReviewDate(event.target.value)} /></label></div><div className="resolution-actions"><button className="outline-button" onClick={() => setPracticeOpen(true)}><Play size={15} /> Practice this resolution</button><button className="outline-button" onClick={copyDecisionPacket}><Clipboard size={15} /> {copiedUpdate ? 'Decision packet copied' : 'Copy decision packet'}</button></div></div>
+            <div className="resolution-panel decide-content"><div className="resolution-intro"><div className="resolution-icon"><Lightbulb size={21} /></div><div><span className="mini-label">A WAY THROUGH</span><h2>{analysis.resolution.title}</h2><p>{analysis.resolution.rationale}</p></div></div><div className="resolution-steps">{analysis.resolution.steps.map((step, index) => <div className="resolution-step" key={step}><span>{String(index + 1).padStart(2, '0')}</span><strong>{step}</strong></div>)}</div><div className="criteria-block"><span className="mini-label">SUCCESS CRITERIA</span><ul>{analysis.resolution.successCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></div><div className="executor-fields"><label><span><UserRound size={13} /> Decision owner</span><input value={owner} onChange={(event) => setOwner(event.target.value)} placeholder="Who owns the next move?" /></label><label><span><CalendarDays size={13} /> Review date</span><input type="date" value={reviewDate} onChange={(event) => setReviewDate(event.target.value)} /></label></div><div className="resolution-actions"><button className="outline-button" onClick={() => setPracticeOpen(true)}><Play size={15} /> Practice this resolution</button><button className="outline-button" onClick={copyDecisionPacket}><Clipboard size={15} /> {copiedUpdate ? 'Decision packet copied' : 'Copy decision packet'}</button></div></div>
 
             <div className="footer-note"><FileText size={15} /> Generated from the perspectives you provided <span>•</span> Friction does not decide who is right.</div>
           </section>
