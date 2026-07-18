@@ -73,7 +73,8 @@ app.post('/api/analyze', async (req, res) => {
     return res.json(result)
   } catch (error) {
     console.error(error)
-    return res.json({ analysis: fallbackAnalysis(parsed.data), source: 'fallback', warning: 'Live analysis was unavailable, so Friction used its local fallback.' })
+    const reason = error instanceof Error ? error.message.slice(0, 180) : 'Unknown API error.'
+    return res.json({ analysis: fallbackAnalysis(parsed.data), source: 'fallback', warning: `Live analysis was unavailable (${reason}) Friction used its local fallback.` })
   }
 })
 
