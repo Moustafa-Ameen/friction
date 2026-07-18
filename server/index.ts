@@ -28,7 +28,7 @@ const inputSchema = z.object({
 const responseSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['decision', 'perspectives', 'sharedGround', 'faultlines', 'resolution', 'confidence'],
+  required: ['decision', 'perspectives', 'sharedGround', 'faultlines', 'resolution', 'redTeam', 'confidence'],
   properties: {
     decision: { type: 'string' },
     perspectives: { type: 'array', minItems: 2, maxItems: 2, items: { type: 'object', additionalProperties: false, required: ['label', 'summary', 'claims', 'priorities'], properties: { label: { type: 'string' }, summary: { type: 'string' }, claims: { type: 'array', items: { type: 'string' } }, priorities: { type: 'array', items: { type: 'string' } } } } },
