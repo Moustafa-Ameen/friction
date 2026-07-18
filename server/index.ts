@@ -33,7 +33,7 @@ const responseSchema = {
     decision: { type: 'string' },
     perspectives: { type: 'array', minItems: 2, maxItems: 2, items: { type: 'object', additionalProperties: false, required: ['label', 'summary', 'claims', 'priorities'], properties: { label: { type: 'string' }, summary: { type: 'string' }, claims: { type: 'array', items: { type: 'string' } }, priorities: { type: 'array', items: { type: 'string' } } } } },
     sharedGround: { type: 'array', items: { type: 'string' } },
-    faultlines: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['type', 'title', 'explanation'], properties: { type: { type: 'string', enum: ['FACT', 'VALUE', 'UNKNOWN', 'DEFINITION'] }, title: { type: 'string' }, explanation: { type: 'string' }, missingEvidence: { type: 'string' } } } },
+    faultlines: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['type', 'title', 'explanation', 'missingEvidence'], properties: { type: { type: 'string', enum: ['FACT', 'VALUE', 'UNKNOWN', 'DEFINITION'] }, title: { type: 'string' }, explanation: { type: 'string' }, missingEvidence: { type: ['string', 'null'] } } } },
     resolution: { type: 'object', additionalProperties: false, required: ['title', 'rationale', 'steps', 'conversationStarter'], properties: { title: { type: 'string' }, rationale: { type: 'string' }, steps: { type: 'array', minItems: 3, maxItems: 3, items: { type: 'string' } }, conversationStarter: { type: 'string' } } },
     confidence: { type: 'number', minimum: 0, maximum: 100 },
   },

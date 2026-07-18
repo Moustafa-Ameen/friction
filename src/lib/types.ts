@@ -13,7 +13,7 @@ export const analysisSchema = z.object({
     type: z.enum(['FACT', 'VALUE', 'UNKNOWN', 'DEFINITION']),
     title: z.string().min(1),
     explanation: z.string().min(1),
-    missingEvidence: z.string().optional(),
+      missingEvidence: z.string().nullable().optional(),
   })).min(1),
   resolution: z.object({
     title: z.string().min(1),
