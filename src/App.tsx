@@ -48,6 +48,7 @@ function App() {
   const [warning, setWarning] = useState('')
   const [practiceOpen, setPracticeOpen] = useState(false)
   const [copied, setCopied] = useState(false)
+  const [copiedUpdate, setCopiedUpdate] = useState(false)
 
   const loadScenario = (id: string) => {
     const next = scenarios[id]
@@ -86,12 +87,12 @@ function App() {
     setSource('fallback'); setWarning(''); setError('')
   }
 
-  const copyStarter = async () => {
+  const writeToClipboard = async (text: string) => {
     try {
-      await navigator.clipboard.writeText(analysis.resolution.conversationStarter)
+      await navigator.clipboard.writeText(text)
     } catch {
       const textarea = document.createElement('textarea')
-      textarea.value = analysis.resolution.conversationStarter
+      textarea.value = text
       textarea.style.position = 'fixed'
       textarea.style.opacity = '0'
       document.body.appendChild(textarea)
@@ -99,15 +100,36 @@ function App() {
       document.execCommand('copy')
       textarea.remove()
     }
+  }
+
+  const copyStarter = async () => {
+    await writeToClipboard(analysis.resolution.conversationStarter)
     setCopied(true)
     window.setTimeout(() => setCopied(false), 1600)
+  }
+
+  const copyTeamUpdate = async () => {
+    const update = [
+      `Decision: ${analysis.decision}`,
+      '',
+      `Proposed path: ${analysis.resolution.title}`,
+      analysis.resolution.rationale,
+      '',
+      'Next steps:',
+      ...analysis.resolution.steps.map((step) => `- ${step}`),
+      '',
+      `Conversation starter: ${analysis.resolution.conversationStarter}`,
+    ].join('\n')
+    await writeToClipboard(update)
+    setCopiedUpdate(true)
+    window.setTimeout(() => setCopiedUpdate(false), 1600)
   }
 
   return (
     <div className="app-shell">
       <header className="topbar">
         <a className="brand" href="#top"><span className="brand-mark">F</span><span>friction</span></a>
-        <div className="topbar-right"><span className={`status-dot ${source === 'gpt-5.6' ? 'live-dot' : ''}`} /> {status === 'loading' ? 'compiling conflict' : source === 'gpt-5.6' ? 'GPT-5.6 analysis' : 'local fallback mode'} <button className="icon-button" title="Privacy information"><LockKeyhole size={16} /></button></div>
+        <div className="topbar-right"><span className={`status-dot ${source === 'gpt-5.6' ? 'live-dot' : ''}`} /> {status === 'loading' ? 'compiling conflict' : source === 'gpt-5.6' ? 'GPT-5.6 Luna analysis' : 'local fallback mode'} <button className="icon-button" title="Privacy information"><LockKeyhole size={16} /></button></div>
       </header>
 
       <main id="top">
@@ -132,7 +154,7 @@ function App() {
           {warning && <div className="warning-banner"><TriangleAlert size={15} /><span>{warning}</span></div>}
 
           <section className="results" aria-live="polite">
-            <div className="results-heading"><div><span className="step">02</span><h2>The conflict, compiled</h2></div><span className="confidence"><span /> {source === 'gpt-5.6' ? 'GPT-5.6 analysis' : 'Local analysis'} | {analysis.confidence}% confidence</span></div>
+            <div className="results-heading"><div><span className="step">02</span><h2>The conflict, compiled</h2></div><span className="confidence"><span /> {source === 'gpt-5.6' ? 'GPT-5.6 Luna analysis' : 'Local analysis'} | {analysis.confidence}% confidence</span></div>
             <div className="decision-banner"><div><span className="mini-label">DECISION UNDER REVIEW</span><h3>{analysis.decision}</h3></div><div className="decision-icon"><TriangleAlert size={19} /></div></div>
 
             <div className="sides-grid result-sides">{analysis.perspectives.map((side, index) => <article className="side-card" key={`${side.label}-${index}`}><div className={`card-top ${index === 0 ? 'coral' : 'teal'}`}><span className="side-dot" /><span>{side.label}</span><span className="perspective">PERSPECTIVE</span></div><p>{side.summary}</p><div className="claim-label">What this side is saying</div><ul>{side.claims.map((claim) => <li key={claim}>{claim}</li>)}</ul><div className="priority-row">Protects <strong>{side.priorities.join(' · ')}</strong></div></article>)}</div>
@@ -142,7 +164,7 @@ function App() {
             <div className="section-heading"><div><span className="step">03</span><h2>Where the friction lives</h2></div><button className="icon-button" title="What do these labels mean?"><CircleHelp size={17} /></button></div>
             <div className="faultline-grid">{analysis.faultlines.map((line) => <article className={`faultline ${line.type.toLowerCase()}`} key={`${line.type}-${line.title}`}><span className="fault-label">{line.type}</span><h3>{line.title}</h3><p>{line.explanation}</p>{line.missingEvidence && <div className="missing-evidence"><span>Next evidence</span>{line.missingEvidence}</div>}</article>)}</div>
 
-            <div className="resolution-panel"><div className="resolution-intro"><div className="resolution-icon"><Lightbulb size={21} /></div><div><span className="mini-label">A WAY THROUGH</span><h2>{analysis.resolution.title}</h2><p>{analysis.resolution.rationale}</p></div></div><div className="resolution-steps">{analysis.resolution.steps.map((step, index) => <div className="resolution-step" key={step}><span>{String(index + 1).padStart(2, '0')}</span><strong>{step}</strong></div>)}</div><button className="outline-button" onClick={() => setPracticeOpen(true)}><Play size={15} /> Practice this resolution</button></div>
+            <div className="resolution-panel"><div className="resolution-intro"><div className="resolution-icon"><Lightbulb size={21} /></div><div><span className="mini-label">A WAY THROUGH</span><h2>{analysis.resolution.title}</h2><p>{analysis.resolution.rationale}</p></div></div><div className="resolution-steps">{analysis.resolution.steps.map((step, index) => <div className="resolution-step" key={step}><span>{String(index + 1).padStart(2, '0')}</span><strong>{step}</strong></div>)}</div><div className="resolution-actions"><button className="outline-button" onClick={() => setPracticeOpen(true)}><Play size={15} /> Practice this resolution</button><button className="outline-button" onClick={copyTeamUpdate}><Clipboard size={15} /> {copiedUpdate ? 'Team update copied' : 'Copy team update'}</button></div></div>
 
             <div className="footer-note"><FileText size={15} /> Generated from the perspectives you provided <span>•</span> Friction does not decide who is right.</div>
           </section>

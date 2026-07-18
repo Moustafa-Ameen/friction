@@ -24,7 +24,7 @@ For separate processes, use `npm.cmd run dev` for Vite and `npm.cmd run dev:serv
 2. Review the two perspectives or switch to Paste conversation.
 3. Select **Compile the conflict**.
 4. Inspect the shared ground, faultlines, missing evidence, and proposed third option.
-5. Open **Practice this resolution** to copy a neutral conversation starter.
+5. Open **Practice this resolution** to copy a neutral conversation starter, or copy a Markdown-ready team update without making another API request.
 
 ## API
 
@@ -43,11 +43,11 @@ Use `mode: "transcript"` with a `transcript` field to analyze pasted chat or ema
 
 ## How GPT-5.6 is used
 
-GPT-5.6 performs the central conflict analysis through the server-side `/api/analyze` endpoint. Its structured response identifies each perspective, shared ground, faultlines, missing evidence, and a testable resolution. Friction validates the response before rendering it. If the API is unavailable, the product falls back to a clearly labeled local analysis so the demo remains runnable.
+GPT-5.6 Luna performs the central conflict analysis through the server-side `/api/analyze` endpoint. The frontend sends the decision and either two perspectives or a pasted transcript to Express; Express sends the text to the Responses API and requests a strict structured JSON response. Friction validates that response with Zod before rendering it. If the API is unavailable, the product falls back to a clearly labeled local analysis so the demo remains runnable. The team-update copy action formats the already-validated result locally and does not call the model again.
 
 ## How Codex accelerated the build
 
-Codex was used to scaffold the React/Vite product, shape the conflict-analysis workflow, implement the responsive UI, add the Express/OpenAI server boundary, debug TypeScript and build issues, and verify the product at desktop and mobile sizes. Product decisions were made around a focused work-team audience, neutral analysis, privacy by default, and a visible third-option resolution instead of a generic chatbot response.
+Codex was used as the development-time engineering partner for Friction: it scaffolded the React/Vite product, shaped the conflict-analysis workflow, implemented the responsive UI, added the Express/OpenAI server boundary, wrote and debugged the Zod validation path, fixed the strict structured-output schema, and verified the product at desktop and mobile sizes. It is not a runtime agent inside the app. At runtime, GPT-5.6 Luna performs the analysis and the browser formats the shareable team update from the validated result. Product decisions were made around a focused work-team audience, neutral analysis, privacy by default, and a visible third-option resolution instead of a generic chatbot response.
 
 ## Limitations
 
