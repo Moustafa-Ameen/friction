@@ -26,7 +26,14 @@ const launchAnalysis: ConflictAnalysis = {
     title: 'Run a controlled beta, not a public launch',
     rationale: 'A small, gated release creates evidence without spending the product\'s reputation.',
     steps: ['Cap the beta at 25 existing users', 'Disable the unstable onboarding path', 'Review support volume Monday morning'],
+    successCriteria: ['No critical onboarding failures among beta users', 'Support requests stay within weekend coverage', 'Monday review produces a clear launch or pause decision'],
     conversationStarter: 'What if we test the riskiest assumption with a small, gated beta instead of treating this as a full launch?',
+  },
+  redTeam: {
+    strongestCounterargument: 'A gated beta can still create support pressure and a poor first impression if the onboarding failure is more widespread than expected.',
+    hiddenAssumption: 'The team can reliably identify and support a small group of existing users without the unstable onboarding path reappearing.',
+    evidenceThatWouldChangeMind: 'A short internal test showing onboarding failure rate, support volume, and named weekend coverage would change the confidence in this path.',
+    preCommitmentTest: 'Run the exact beta onboarding flow with five internal testers and stop if more than one needs manual recovery.',
   },
   confidence: 87,
 }

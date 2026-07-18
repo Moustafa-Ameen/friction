@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowRight, Check, CircleHelp, Clipboard, FileText, Lightbulb, LockKeyhole, Play, RotateCcw, Sparkles, TriangleAlert, X } from 'lucide-react'
+import { ArrowRight, CalendarDays, Check, CircleHelp, Clipboard, FileText, Lightbulb, LockKeyhole, Play, RotateCcw, ShieldAlert, Sparkles, TriangleAlert, UserRound, X } from 'lucide-react'
 import { fallbackAnalysis } from './lib/fallback'
 import { analysisSchema, type AnalyzeInput, type ConflictAnalysis } from './lib/types'
 
@@ -49,6 +49,8 @@ function App() {
   const [practiceOpen, setPracticeOpen] = useState(false)
   const [copied, setCopied] = useState(false)
   const [copiedUpdate, setCopiedUpdate] = useState(false)
+  const [owner, setOwner] = useState('')
+  const [reviewDate, setReviewDate] = useState('')
 
   const loadScenario = (id: string) => {
     const next = scenarios[id]
@@ -84,7 +86,7 @@ function App() {
     loadScenario('launch')
     setMode('perspectives')
     setAnalysis(fallbackAnalysis({ mode: 'perspectives', decision: '', sideA: '', sideB: '' }))
-    setSource('idle'); setWarning(''); setError('')
+    setSource('idle'); setWarning(''); setError(''); setOwner(''); setReviewDate('')
   }
 
   const writeToClipboard = async (text: string) => {
@@ -108,17 +110,28 @@ function App() {
     window.setTimeout(() => setCopied(false), 1600)
   }
 
-  const copyTeamUpdate = async () => {
+  const copyDecisionPacket = async () => {
     const update = [
+      '# Decision packet',
+      '',
       `Decision: ${analysis.decision}`,
       '',
       `Proposed path: ${analysis.resolution.title}`,
+      '',
+      `Owner: ${owner || 'Unassigned'}`,
+      `Review date: ${reviewDate || 'Set before sending'}`,
+      '',
+      'Why this path:',
       analysis.resolution.rationale,
       '',
       'Next steps:',
       ...analysis.resolution.steps.map((step) => `- ${step}`),
       '',
-      `Conversation starter: ${analysis.resolution.conversationStarter}`,
+      'Success criteria:',
+      ...analysis.resolution.successCriteria.map((criterion) => `- ${criterion}`),
+      '',
+      'Pressure test:',
+      analysis.redTeam.preCommitmentTest,
     ].join('\n')
     await writeToClipboard(update)
     setCopiedUpdate(true)
@@ -164,7 +177,10 @@ function App() {
             <div className="section-heading"><div><span className="step">03</span><h2>Where the friction lives</h2></div><button className="icon-button" title="What do these labels mean?"><CircleHelp size={17} /></button></div>
             <div className="faultline-grid">{analysis.faultlines.map((line) => <article className={`faultline ${line.type.toLowerCase()}`} key={`${line.type}-${line.title}`}><span className="fault-label">{line.type}</span><h3>{line.title}</h3><p>{line.explanation}</p>{line.missingEvidence && <div className="missing-evidence"><span>Next evidence</span>{line.missingEvidence}</div>}</article>)}</div>
 
-            <div className="resolution-panel"><div className="resolution-intro"><div className="resolution-icon"><Lightbulb size={21} /></div><div><span className="mini-label">A WAY THROUGH</span><h2>{analysis.resolution.title}</h2><p>{analysis.resolution.rationale}</p></div></div><div className="resolution-steps">{analysis.resolution.steps.map((step, index) => <div className="resolution-step" key={step}><span>{String(index + 1).padStart(2, '0')}</span><strong>{step}</strong></div>)}</div><div className="resolution-actions"><button className="outline-button" onClick={() => setPracticeOpen(true)}><Play size={15} /> Practice this resolution</button><button className="outline-button" onClick={copyTeamUpdate}><Clipboard size={15} /> {copiedUpdate ? 'Team update copied' : 'Copy team update'}</button></div></div>
+            <section className="section-heading pressure-heading"><div><span className="step">04</span><h2>Pressure-test the path</h2></div><ShieldAlert size={18} /></section>
+            <section className="red-team-panel"><div className="red-team-intro"><ShieldAlert size={19} /><p>Challenge the plan before the team commits to it.</p></div><div className="pressure-grid"><article><span>Strongest counterargument</span><p>{analysis.redTeam.strongestCounterargument}</p></article><article><span>Hidden assumption</span><p>{analysis.redTeam.hiddenAssumption}</p></article><article><span>Evidence that would change the decision</span><p>{analysis.redTeam.evidenceThatWouldChangeMind}</p></article><article><span>Pre-commitment test</span><p>{analysis.redTeam.preCommitmentTest}</p></article></div></section>
+
+            <div className="resolution-panel"><div className="resolution-intro"><div className="resolution-icon"><Lightbulb size={21} /></div><div><span className="mini-label">A WAY THROUGH</span><h2>{analysis.resolution.title}</h2><p>{analysis.resolution.rationale}</p></div></div><div className="resolution-steps">{analysis.resolution.steps.map((step, index) => <div className="resolution-step" key={step}><span>{String(index + 1).padStart(2, '0')}</span><strong>{step}</strong></div>)}</div><div className="criteria-block"><span className="mini-label">SUCCESS CRITERIA</span><ul>{analysis.resolution.successCriteria.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul></div><div className="executor-fields"><label><span><UserRound size={13} /> Decision owner</span><input value={owner} onChange={(event) => setOwner(event.target.value)} placeholder="Who owns the next move?" /></label><label><span><CalendarDays size={13} /> Review date</span><input type="date" value={reviewDate} onChange={(event) => setReviewDate(event.target.value)} /></label></div><div className="resolution-actions"><button className="outline-button" onClick={() => setPracticeOpen(true)}><Play size={15} /> Practice this resolution</button><button className="outline-button" onClick={copyDecisionPacket}><Clipboard size={15} /> {copiedUpdate ? 'Decision packet copied' : 'Copy decision packet'}</button></div></div>
 
             <div className="footer-note"><FileText size={15} /> Generated from the perspectives you provided <span>•</span> Friction does not decide who is right.</div>
           </section>

@@ -19,7 +19,14 @@ export const analysisSchema = z.object({
     title: z.string().min(1),
     rationale: z.string().min(1),
     steps: z.array(z.string()).length(3),
+    successCriteria: z.array(z.string()).length(3),
     conversationStarter: z.string().min(1),
+  }),
+  redTeam: z.object({
+    strongestCounterargument: z.string().min(1),
+    hiddenAssumption: z.string().min(1),
+    evidenceThatWouldChangeMind: z.string().min(1),
+    preCommitmentTest: z.string().min(1),
   }),
   confidence: z.number().min(0).max(100),
 })

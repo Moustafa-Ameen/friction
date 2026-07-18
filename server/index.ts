@@ -34,7 +34,8 @@ const responseSchema = {
     perspectives: { type: 'array', minItems: 2, maxItems: 2, items: { type: 'object', additionalProperties: false, required: ['label', 'summary', 'claims', 'priorities'], properties: { label: { type: 'string' }, summary: { type: 'string' }, claims: { type: 'array', items: { type: 'string' } }, priorities: { type: 'array', items: { type: 'string' } } } } },
     sharedGround: { type: 'array', items: { type: 'string' } },
     faultlines: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['type', 'title', 'explanation', 'missingEvidence'], properties: { type: { type: 'string', enum: ['FACT', 'VALUE', 'UNKNOWN', 'DEFINITION'] }, title: { type: 'string' }, explanation: { type: 'string' }, missingEvidence: { type: ['string', 'null'] } } } },
-    resolution: { type: 'object', additionalProperties: false, required: ['title', 'rationale', 'steps', 'conversationStarter'], properties: { title: { type: 'string' }, rationale: { type: 'string' }, steps: { type: 'array', minItems: 3, maxItems: 3, items: { type: 'string' } }, conversationStarter: { type: 'string' } } },
+    resolution: { type: 'object', additionalProperties: false, required: ['title', 'rationale', 'steps', 'successCriteria', 'conversationStarter'], properties: { title: { type: 'string' }, rationale: { type: 'string' }, steps: { type: 'array', minItems: 3, maxItems: 3, items: { type: 'string' } }, successCriteria: { type: 'array', minItems: 3, maxItems: 3, items: { type: 'string' } }, conversationStarter: { type: 'string' } } },
+    redTeam: { type: 'object', additionalProperties: false, required: ['strongestCounterargument', 'hiddenAssumption', 'evidenceThatWouldChangeMind', 'preCommitmentTest'], properties: { strongestCounterargument: { type: 'string' }, hiddenAssumption: { type: 'string' }, evidenceThatWouldChangeMind: { type: 'string' }, preCommitmentTest: { type: 'string' } } },
     confidence: { type: 'number', minimum: 0, maximum: 100 },
   },
 }
@@ -53,7 +54,7 @@ async function runModel(input: AnalyzeInput) {
     model: process.env.OPENAI_MODEL || 'gpt-5.6-luna',
     max_output_tokens: Number(process.env.OPENAI_MAX_OUTPUT_TOKENS || 1600),
     input: [
-      { role: 'system', content: [{ type: 'input_text', text: 'You are Friction, a neutral conflict analysis tool for work teams. Use only the supplied text. Do not invent evidence, diagnose people, assign blame, or give legal, medical, or financial advice. Separate claims from values, assumptions, definitions, and unknowns. Represent both perspectives fairly. Prefer a small, testable third option that reduces uncertainty. Return only the requested JSON structure.' }] },
+      { role: 'system', content: [{ type: 'input_text', text: 'You are Friction, a neutral decision system for work teams. Use only the supplied text. Do not invent evidence, diagnose people, assign blame, or give legal, medical, or financial advice. Separate claims from values, assumptions, definitions, and unknowns. Represent both perspectives fairly. Prefer a small, testable third option that reduces uncertainty. For the proposed resolution, generate exactly three measurable success criteria. Then red-team that resolution fairly: state the strongest counterargument, the most dangerous hidden assumption, what evidence would change the recommendation, and one small pre-commitment test. Challenge the plan, not either person. Return only the requested JSON structure.' }] },
       { role: 'user', content: [{ type: 'input_text', text: promptFor(input) }] },
     ],
     text: { format: { type: 'json_schema', name: 'conflict_analysis', strict: true, schema: responseSchema } },
