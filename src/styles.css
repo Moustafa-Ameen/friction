@@ -9,9 +9,11 @@ button { cursor: pointer; }
 .container { width: min(1100px, calc(100% - 48px)); margin: 0 auto; }
 .topbar { height: 68px; padding: 0 28px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd9d0; font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
 .brand { display: flex; align-items: center; gap: 10px; color: #1c2422; text-decoration: none; font-weight: 500; font-size: 14px; letter-spacing: .04em; text-transform: lowercase; }
-.brand-mark { width: 29px; height: 29px; display: grid; place-items: center; color: #f7f4ee; background: #1c2422; font-family: 'Playfair Display', serif; font-size: 18px; border-radius: 50%; }
+.brand-mark { position: relative; width: 29px; height: 29px; display: grid; place-items: center; color: #f7f4ee; background: #1c2422; font-family: 'Playfair Display', serif; font-size: 18px; border-radius: 50%; }
+.brand-mark::after { content: ''; position: absolute; inset: -4px; border: 1px solid #c7bba3; border-left-color: transparent; border-radius: 50%; transform: rotate(-24deg); }
 .topbar-right { display: flex; align-items: center; gap: 8px; color: #747a75; }
 .status-dot, .confidence span { width: 7px; height: 7px; background: #4c9b7b; display: inline-block; border-radius: 50%; }
+.ready-dot { background: #c7bba3; }
 .icon-button { display: grid; place-items: center; border: 0; color: #777d77; background: transparent; padding: 5px; }
 .hero { padding: 83px 0 55px; }
 .eyebrow, .mini-label, .fault-label, .step { font: 500 10px 'DM Mono', monospace; letter-spacing: .12em; text-transform: uppercase; }

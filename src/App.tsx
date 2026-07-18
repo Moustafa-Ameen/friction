@@ -4,7 +4,7 @@ import { fallbackAnalysis } from './lib/fallback'
 import { analysisSchema, type AnalyzeInput, type ConflictAnalysis } from './lib/types'
 
 type Mode = AnalyzeInput['mode']
-type Source = 'fallback' | 'gpt-5.6'
+type Source = 'idle' | 'fallback' | 'gpt-5.6'
 
 type Scenario = {
   topic: string
@@ -42,7 +42,7 @@ function App() {
   const [sideB, setSideB] = useState(scenarios.launch.sideB)
   const [transcript, setTranscript] = useState(scenarios.launch.transcript)
   const [analysis, setAnalysis] = useState<ConflictAnalysis>(() => fallbackAnalysis({ mode: 'perspectives', decision: '', sideA: '', sideB: '' }))
-  const [source, setSource] = useState<Source>('fallback')
+  const [source, setSource] = useState<Source>('idle')
   const [status, setStatus] = useState<'idle' | 'loading'>('idle')
   const [error, setError] = useState('')
   const [warning, setWarning] = useState('')
@@ -84,7 +84,7 @@ function App() {
     loadScenario('launch')
     setMode('perspectives')
     setAnalysis(fallbackAnalysis({ mode: 'perspectives', decision: '', sideA: '', sideB: '' }))
-    setSource('fallback'); setWarning(''); setError('')
+    setSource('idle'); setWarning(''); setError('')
   }
 
   const writeToClipboard = async (text: string) => {
@@ -129,7 +129,7 @@ function App() {
     <div className="app-shell">
       <header className="topbar">
         <a className="brand" href="#top"><span className="brand-mark">F</span><span>friction</span></a>
-        <div className="topbar-right"><span className={`status-dot ${source === 'gpt-5.6' ? 'live-dot' : ''}`} /> {status === 'loading' ? 'compiling conflict' : source === 'gpt-5.6' ? 'GPT-5.6 Luna analysis' : 'local fallback mode'} <button className="icon-button" title="Privacy information"><LockKeyhole size={16} /></button></div>
+        <div className="topbar-right"><span className={`status-dot ${source === 'gpt-5.6' ? 'live-dot' : source === 'idle' ? 'ready-dot' : ''}`} /> {status === 'loading' ? 'compiling conflict' : source === 'gpt-5.6' ? 'GPT-5.6 Luna analysis' : source === 'fallback' ? 'local fallback mode' : 'ready to compile'} <button className="icon-button" title="Privacy information"><LockKeyhole size={16} /></button></div>
       </header>
 
       <main id="top">
@@ -154,7 +154,7 @@ function App() {
           {warning && <div className="warning-banner"><TriangleAlert size={15} /><span>{warning}</span></div>}
 
           <section className="results" aria-live="polite">
-            <div className="results-heading"><div><span className="step">02</span><h2>The conflict, compiled</h2></div><span className="confidence"><span /> {source === 'gpt-5.6' ? 'GPT-5.6 Luna analysis' : 'Local analysis'} | {analysis.confidence}% confidence</span></div>
+            <div className="results-heading"><div><span className="step">02</span><h2>The conflict, compiled</h2></div><span className="confidence"><span /> {source === 'gpt-5.6' ? 'GPT-5.6 Luna analysis' : source === 'fallback' ? `Local analysis | ${analysis.confidence}% confidence` : 'Demo preview'}</span></div>
             <div className="decision-banner"><div><span className="mini-label">DECISION UNDER REVIEW</span><h3>{analysis.decision}</h3></div><div className="decision-icon"><TriangleAlert size={19} /></div></div>
 
             <div className="sides-grid result-sides">{analysis.perspectives.map((side, index) => <article className="side-card" key={`${side.label}-${index}`}><div className={`card-top ${index === 0 ? 'coral' : 'teal'}`}><span className="side-dot" /><span>{side.label}</span><span className="perspective">PERSPECTIVE</span></div><p>{side.summary}</p><div className="claim-label">What this side is saying</div><ul>{side.claims.map((claim) => <li key={claim}>{claim}</li>)}</ul><div className="priority-row">Protects <strong>{side.priorities.join(' · ')}</strong></div></article>)}</div>
