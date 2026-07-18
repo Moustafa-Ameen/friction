@@ -45,9 +45,13 @@ Use `mode: "transcript"` with a `transcript` field to analyze pasted chat or ema
 
 GPT-5.6 Luna performs the central conflict analysis through the server-side `/api/analyze` endpoint. The frontend sends the decision and either two perspectives or a pasted transcript to Express; Express sends the text to the Responses API and requests a strict structured JSON response containing the conflict map, three success criteria, and a four-part red-team pressure test. Friction validates that response with Zod before rendering it. If the API is unavailable, the product falls back to a clearly labeled local analysis so the demo remains runnable. The decision-packet action formats the already-validated result plus local owner/review-date fields and does not call the model again.
 
+The visible workflow mirrors the analysis pipeline: read both sides, find agreement, identify what needs proof, then test a way forward. This makes the product more than a generic advice prompt: each stage produces a different artifact that feeds the next stage.
+
 ## How Codex accelerated the build
 
 Codex was used as the development-time engineering partner for Friction: it scaffolded the React/Vite product, shaped the conflict-analysis workflow, implemented the responsive UI, added the Express/OpenAI server boundary, wrote and debugged the Zod validation path, fixed the strict structured-output schema, and verified the product at desktop and mobile sizes. It is not a runtime agent inside the app. At runtime, GPT-5.6 Luna performs the analysis, the browser renders the red-team critique, and the browser formats the accountable decision packet from the validated result. Product decisions were made around a focused work-team audience, neutral analysis, privacy by default, and a visible third-option resolution instead of a generic chatbot response.
+
+Key engineering decisions included keeping the API key server-side, validating every model response before rendering, using a local fallback for reliable judging, and making the decision packet a client-side transformation so sharing it never spends another model request.
 
 ## Limitations
 

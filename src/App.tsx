@@ -158,7 +158,7 @@ function App() {
         <section className="hero container">
           <div className="eyebrow"><span className="eyebrow-line" /> CONFLICT, MADE LEGIBLE</div>
           <h1>Find the disagreement<br /><em>underneath</em> the argument.</h1>
-          <p className="hero-copy">Friction separates facts from assumptions, reveals what people still share, and finds the next move that can get a decision unstuck.</p>
+          <p className="hero-copy">Friction helps product and engineering teams get unstuck on launch, scope, and hiring decisions. It separates facts from assumptions and turns disagreement into a testable next move.</p>
         </section>
 
         <nav className="workflow-nav container" aria-label="Friction workflow">
@@ -184,6 +184,7 @@ function App() {
           <section className={`results ${view}`} aria-live="polite">
             <div className="results-heading"><div><span className="step">{view === 'understand' ? '02' : '03'}</span><h2>{view === 'understand' ? 'Understand the disagreement' : 'Choose a way forward'}</h2></div><span className="confidence"><span /> {source === 'gpt-5.6' ? 'GPT-5.6 Luna analysis' : source === 'fallback' ? `Local analysis | ${analysis.confidence}% confidence` : 'Demo preview'}</span></div>
             <div className="decision-banner"><div><span className="mini-label">DECISION UNDER REVIEW</span><h3>{analysis.decision}</h3></div><div className="decision-icon"><TriangleAlert size={19} /></div></div>
+            <div className="method-strip" aria-label="How Friction works"><span><b>1</b> Read both sides</span><i>→</i><span><b>2</b> Find agreement</span><i>→</i><span><b>3</b> Mark what needs proof</span><i>→</i><span><b>4</b> Test a way forward</span></div>
 
             <div className="sides-grid result-sides understand-content">{analysis.perspectives.map((side, index) => <article className="side-card" key={`${side.label}-${index}`}><div className={`card-top ${index === 0 ? 'coral' : 'teal'}`}><span className="side-dot" /><span>{side.label}</span><span className="perspective">PERSPECTIVE</span></div><p>{side.summary}</p><div className="claim-label">What this person wants</div><ul>{side.claims.map((claim) => <li key={claim}>{claim}</li>)}</ul><div className="priority-row">Protects <strong>{side.priorities.join(' · ')}</strong></div></article>)}</div>
 
