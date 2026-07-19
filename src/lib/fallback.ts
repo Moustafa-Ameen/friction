@@ -1,71 +1,53 @@
 import type { AnalyzeInput, ConflictAnalysis } from './types'
 
-const launchAnalysis: ConflictAnalysis = {
-  decision: 'Should we launch the beta this Friday?',
-  perspectives: [
+const defaultDecision = {
+  title: 'Should we launch the beta this Friday?',
+  importanceScore: 86,
+  scoreReason: 'This affects customer trust and timing, and the remaining uncertainty could create a costly launch problem.',
+  situation: 'The team wants real user feedback, but onboarding bugs and thin weekend support make a full public launch risky.',
+  disagreementType: 'FACT' as const,
+  whatWouldHelp: 'Run the onboarding flow with a small group of new users and record completion failures plus support requests.',
+  options: [
     {
-      label: 'Launch now',
-      summary: 'Speed creates learning before the window closes.',
-      claims: ['Competitors are moving quickly', 'Feedback is more valuable than another week of debate', 'The remaining bugs are manageable'],
-      priorities: ['Learning speed', 'Competitive timing', 'Momentum'],
+      title: 'Run a small invite-only beta',
+      description: 'Test the product with a limited group while keeping the ability to pause access.',
+      benefits: ['Creates real feedback quickly', 'Limits the cost of a bad first impression'],
+      drawbacks: ['Still needs support coverage', 'Results may not represent a full launch'],
     },
     {
-      label: 'Wait one week',
-      summary: 'Trust is harder to rebuild than a deadline.',
-      claims: ['Onboarding still breaks for new users', 'A poor first impression is difficult to undo', 'Weekend support coverage is thin'],
-      priorities: ['Reliability', 'Customer trust', 'Support capacity'],
+      title: 'Launch publicly on Friday',
+      description: 'Accept the current risk and learn from a broader group of users immediately.',
+      benefits: ['Maximizes learning speed', 'Avoids another delay'],
+      drawbacks: ['Onboarding problems affect more users', 'Support pressure may be hard to contain'],
+    },
+    {
+      title: 'Test onboarding with a small internal group',
+      description: 'Run the risky flow with a few testers and use what you learn to set a launch threshold.',
+      benefits: ['Turns a concern into evidence', 'Creates a clearer go/no-go decision'],
+      drawbacks: ['Takes focused team time', 'Internal testers may not represent new users'],
     },
   ],
-  sharedGround: ['The team needs real user feedback', 'The opportunity window is moving', 'An open-ended delay is unacceptable'],
-  faultlines: [
-    { type: 'FACT', title: 'How harmful are the remaining bugs?', explanation: 'The disagreement is about severity, not whether bugs exist.', missingEvidence: 'A short beta would reveal onboarding failure rate and support volume.' },
-    { type: 'VALUE', title: 'Speed versus first impression', explanation: 'Both sides are protecting the product, but optimizing for different risks.' },
-    { type: 'UNKNOWN', title: 'Can support absorb a small launch?', explanation: 'No one has tested the weekend coverage assumption.', missingEvidence: 'Confirm who is available and define an escalation threshold.' },
-  ],
-  resolution: {
-    title: 'Run a controlled beta, not a public launch',
-    rationale: 'A small, gated release creates evidence without spending the product\'s reputation.',
-    steps: ['Cap the beta at 25 existing users', 'Disable the unstable onboarding path', 'Review support volume Monday morning'],
-    successCriteria: ['No critical onboarding failures among beta users', 'Support requests stay within weekend coverage', 'Monday review produces a clear launch or pause decision'],
-    conversationStarter: 'What if we test the riskiest assumption with a small, gated beta instead of treating this as a full launch?',
-  },
-  redTeam: {
-    strongestCounterargument: 'A gated beta can still create support pressure and a poor first impression if the onboarding failure is more widespread than expected.',
-    hiddenAssumption: 'The team can reliably identify and support a small group of existing users without the unstable onboarding path reappearing.',
-    evidenceThatWouldChangeMind: 'A short internal test showing onboarding failure rate, support volume, and named weekend coverage would change the confidence in this path.',
-    preCommitmentTest: 'Run the exact beta onboarding flow with five internal testers and stop if more than one needs manual recovery.',
-  },
-  confidence: 87,
+  nextQuestion: 'What is the smallest group and support plan that would let us test onboarding safely?',
+}
+
+function extractLines(text: string) {
+  return text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
 }
 
 export function fallbackAnalysis(input: AnalyzeInput): ConflictAnalysis {
-  if (input.mode === 'transcript' && input.transcript?.trim()) {
-    const lines = input.transcript.split(/\r?\n/).map((line) => line.trim()).filter(Boolean)
-    const left = lines.filter((_, index) => index % 2 === 0).slice(0, 3)
-    const right = lines.filter((_, index) => index % 2 === 1).slice(0, 3)
-    return {
-      ...launchAnalysis,
-      decision: input.decision.trim() || 'What decision is this conversation trying to make?',
-      perspectives: [
-        { ...launchAnalysis.perspectives[0], claims: left.length ? left : launchAnalysis.perspectives[0].claims },
-        { ...launchAnalysis.perspectives[1], claims: right.length ? right : launchAnalysis.perspectives[1].claims },
-      ],
-      confidence: 64,
-    }
-  }
+  const lines = extractLines(input.transcript || `${input.sideA || ''}\n${input.sideB || ''}`)
+  const decision = input.decision?.trim()
+  if (!lines.length && decision) return { summary: `The main decision is whether to ${decision.toLowerCase().replace(/^should we /, '')}.`, decisions: [{ ...defaultDecision, title: decision }] }
+  if (!lines.length) return { summary: 'Friction found a decision worth clarifying.', decisions: [defaultDecision] }
 
-  const decision = input.decision.trim() || launchAnalysis.decision
-  const sideA = input.sideA?.trim()
-  const sideB = input.sideB?.trim()
-  if (!sideA && !sideB) return { ...launchAnalysis, decision }
-
+  const preview = lines.slice(0, 3).join(' ')
   return {
-    ...launchAnalysis,
-    decision,
-    perspectives: [
-      { ...launchAnalysis.perspectives[0], claims: sideA ? [sideA] : launchAnalysis.perspectives[0].claims },
-      { ...launchAnalysis.perspectives[1], claims: sideB ? [sideB] : launchAnalysis.perspectives[1].claims },
-    ],
-    confidence: 58,
+    summary: `The conversation centers on a choice that needs a clear next step: ${preview}`,
+    decisions: [{
+      ...defaultDecision,
+      title: decision || defaultDecision.title,
+      situation: `The conversation includes several views that need to be turned into a concrete choice. ${preview}`,
+      options: defaultDecision.options,
+    }],
   }
 }

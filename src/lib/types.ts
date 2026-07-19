@@ -1,40 +1,34 @@
 import { z } from 'zod'
 
-export const analysisSchema = z.object({
-  decision: z.string().min(1),
-  perspectives: z.array(z.object({
-    label: z.string().min(1),
-    summary: z.string().min(1),
-    claims: z.array(z.string()).min(1),
-    priorities: z.array(z.string()).min(1),
-  })).min(2).max(2),
-  sharedGround: z.array(z.string()).min(1),
-  faultlines: z.array(z.object({
-    type: z.enum(['FACT', 'VALUE', 'UNKNOWN', 'DEFINITION']),
-    title: z.string().min(1),
-    explanation: z.string().min(1),
-      missingEvidence: z.string().nullable().optional(),
-  })).min(1),
-  resolution: z.object({
-    title: z.string().min(1),
-    rationale: z.string().min(1),
-    steps: z.array(z.string()).length(3),
-    successCriteria: z.array(z.string()).length(3),
-    conversationStarter: z.string().min(1),
-  }),
-  redTeam: z.object({
-    strongestCounterargument: z.string().min(1),
-    hiddenAssumption: z.string().min(1),
-    evidenceThatWouldChangeMind: z.string().min(1),
-    preCommitmentTest: z.string().min(1),
-  }),
-  confidence: z.number().min(0).max(100),
+const optionSchema = z.object({
+  title: z.string().min(1),
+  description: z.string().min(1),
+  benefits: z.array(z.string().min(1)).min(1).max(3),
+  drawbacks: z.array(z.string().min(1)).min(1).max(3),
 })
 
+const decisionSchema = z.object({
+  title: z.string().min(1),
+  importanceScore: z.number().min(0).max(100),
+  scoreReason: z.string().min(1),
+  situation: z.string().min(1),
+  disagreementType: z.enum(['FACT', 'VALUE', 'DEFINITION', 'UNKNOWN']),
+  whatWouldHelp: z.string().min(1),
+  options: z.array(optionSchema).min(2).max(3),
+  nextQuestion: z.string().min(1),
+})
+
+export const analysisSchema = z.object({
+  summary: z.string().min(1),
+  decisions: z.array(decisionSchema).min(1).max(3),
+})
+
+export type DecisionOption = z.infer<typeof optionSchema>
+export type DecisionItem = z.infer<typeof decisionSchema>
 export type ConflictAnalysis = z.infer<typeof analysisSchema>
 
 export type AnalyzeInput = {
-  decision: string
+  decision?: string
   mode: 'perspectives' | 'transcript'
   sideA?: string
   sideB?: string

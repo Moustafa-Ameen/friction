@@ -28,15 +28,10 @@ const inputSchema = z.object({
 const responseSchema = {
   type: 'object',
   additionalProperties: false,
-  required: ['decision', 'perspectives', 'sharedGround', 'faultlines', 'resolution', 'redTeam', 'confidence'],
+  required: ['summary', 'decisions'],
   properties: {
-    decision: { type: 'string' },
-    perspectives: { type: 'array', minItems: 2, maxItems: 2, items: { type: 'object', additionalProperties: false, required: ['label', 'summary', 'claims', 'priorities'], properties: { label: { type: 'string' }, summary: { type: 'string' }, claims: { type: 'array', items: { type: 'string' } }, priorities: { type: 'array', items: { type: 'string' } } } } },
-    sharedGround: { type: 'array', items: { type: 'string' } },
-    faultlines: { type: 'array', items: { type: 'object', additionalProperties: false, required: ['type', 'title', 'explanation', 'missingEvidence'], properties: { type: { type: 'string', enum: ['FACT', 'VALUE', 'UNKNOWN', 'DEFINITION'] }, title: { type: 'string' }, explanation: { type: 'string' }, missingEvidence: { type: ['string', 'null'] } } } },
-    resolution: { type: 'object', additionalProperties: false, required: ['title', 'rationale', 'steps', 'successCriteria', 'conversationStarter'], properties: { title: { type: 'string' }, rationale: { type: 'string' }, steps: { type: 'array', minItems: 3, maxItems: 3, items: { type: 'string' } }, successCriteria: { type: 'array', minItems: 3, maxItems: 3, items: { type: 'string' } }, conversationStarter: { type: 'string' } } },
-    redTeam: { type: 'object', additionalProperties: false, required: ['strongestCounterargument', 'hiddenAssumption', 'evidenceThatWouldChangeMind', 'preCommitmentTest'], properties: { strongestCounterargument: { type: 'string' }, hiddenAssumption: { type: 'string' }, evidenceThatWouldChangeMind: { type: 'string' }, preCommitmentTest: { type: 'string' } } },
-    confidence: { type: 'number', minimum: 0, maximum: 100 },
+    summary: { type: 'string' },
+    decisions: { type: 'array', minItems: 1, maxItems: 3, items: { type: 'object', additionalProperties: false, required: ['title', 'importanceScore', 'scoreReason', 'situation', 'disagreementType', 'whatWouldHelp', 'options', 'nextQuestion'], properties: { title: { type: 'string' }, importanceScore: { type: 'number', minimum: 0, maximum: 100 }, scoreReason: { type: 'string' }, situation: { type: 'string' }, disagreementType: { type: 'string', enum: ['FACT', 'VALUE', 'DEFINITION', 'UNKNOWN'] }, whatWouldHelp: { type: 'string' }, options: { type: 'array', minItems: 2, maxItems: 3, items: { type: 'object', additionalProperties: false, required: ['title', 'description', 'benefits', 'drawbacks'], properties: { title: { type: 'string' }, description: { type: 'string' }, benefits: { type: 'array', minItems: 1, maxItems: 3, items: { type: 'string' } }, drawbacks: { type: 'array', minItems: 1, maxItems: 3, items: { type: 'string' } } } } }, nextQuestion: { type: 'string' } } } },
   },
 }
 
@@ -44,7 +39,7 @@ function promptFor(input: AnalyzeInput) {
   const source = input.mode === 'transcript'
     ? `Conversation transcript:\n${input.transcript}`
     : `Side A:\n${input.sideA}\n\nSide B:\n${input.sideB}`
-  return `Decision under review: ${input.decision}\n\n${source}`
+  return `Optional context: ${input.decision || '(none provided; infer the decisions from the supplied text)'}\n\n${source}`
 }
 
 async function runModel(input: AnalyzeInput) {
@@ -54,10 +49,10 @@ async function runModel(input: AnalyzeInput) {
     model: process.env.OPENAI_MODEL || 'gpt-5.6-luna',
     max_output_tokens: Number(process.env.OPENAI_MAX_OUTPUT_TOKENS || 1600),
     input: [
-      { role: 'system', content: [{ type: 'input_text', text: 'You are Friction, a neutral decision system for work teams. Use only the supplied text. Do not invent evidence, diagnose people, assign blame, or give legal, medical, or financial advice. Separate claims from values, assumptions, definitions, and unknowns. Represent both perspectives fairly. Prefer a small, testable third option that reduces uncertainty. Use plain everyday English, not consultant or management jargon. Keep titles short, explanations to one or two sentences, and make each success criterion concrete. For the proposed resolution, generate exactly three measurable success criteria. Then challenge that resolution fairly: state the strongest case against it, the riskiest assumption, what evidence would change the decision, and one small first test. Challenge the plan, not either person. Return only the requested JSON structure.' }] },
+      { role: 'system', content: [{ type: 'input_text', text: 'You are Friction, a calm decision clarity tool for everyday people and teams. Use only the supplied text. Do not invent facts, diagnose people, assign blame, or give legal, medical, or financial advice. Extract up to three concrete decisions that the text says or strongly implies need to be made. Give each decision a short, plain-English title. Rank importance from 0 to 100 using impact, urgency, how hard it is to undo, and how much uncertainty remains. Explain the score in one short sentence. Classify the central disagreement for each decision as exactly one of FACT, VALUE, DEFINITION, or UNKNOWN: FACT means a disputed claim could be checked, VALUE means priorities or ideas of success differ, DEFINITION means people use an important word or standard differently, and UNKNOWN means the supplied text does not establish what is missing. Provide one specific, checkable answer to what would help next; do not use generic phrases like “communicate better” or “clarify expectations.” For each decision, describe the situation in plain English and generate two or three concrete action options. Do not include a passive wait option unless the text clearly requires waiting; prefer actions such as doing a smaller version, changing the approach, asking for a commitment, or gathering one specific piece of evidence. For every option, list clear benefits and drawbacks. End each decision with one useful next question. Use everyday language, not consultant jargon. Return only the requested JSON structure.' }] },
       { role: 'user', content: [{ type: 'input_text', text: promptFor(input) }] },
     ],
-    text: { format: { type: 'json_schema', name: 'conflict_analysis', strict: true, schema: responseSchema } },
+    text: { format: { type: 'json_schema', name: 'decision_analysis', strict: true, schema: responseSchema } },
   })
   const parsed = analysisSchema.safeParse(JSON.parse(response.output_text))
   if (!parsed.success) throw new Error('The model returned an invalid conflict analysis.')
@@ -73,7 +68,7 @@ app.post('/api/analyze', async (req, res) => {
     const result = await runModel(parsed.data)
     return res.json(result)
   } catch (error) {
-    console.error(error)
+    console.error(error instanceof Error ? error.message : 'Unknown API error')
     const reason = error instanceof Error ? error.message.slice(0, 180) : 'Unknown API error.'
     return res.json({ analysis: fallbackAnalysis(parsed.data), source: 'fallback', warning: `Live analysis was unavailable (${reason}) Friction used its local fallback.` })
   }
