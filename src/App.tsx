@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
-import { ArrowRight, BookOpen, CalendarDays, ChevronLeft, ChevronRight, Clipboard, Download, FileText, Grid2X2, LockKeyhole, MoreHorizontal, PanelRight, Printer, RotateCcw, Save, Settings, Share2, Sparkles, Sun, TriangleAlert, UserRound, Users, X } from 'lucide-react'
+import { ArrowRight, BookOpen, CalendarDays, ChevronLeft, ChevronRight, Clipboard, Download, FileText, Grid2X2, LockKeyhole, MoreHorizontal, PanelRight, Pencil, Plus, Printer, RotateCcw, Save, Settings, Share2, Sparkles, Sun, Trash2, TriangleAlert, UserRound, Users, X } from 'lucide-react'
 import { fallbackAnalysis } from './lib/fallback'
 import { analysisSchema, type AnalyzeInput, type ConflictAnalysis } from './lib/types'
 
@@ -7,6 +7,7 @@ type Source = 'idle' | 'fallback' | 'gpt-5.6'
 type Step = 1 | 2 | 3 | 4 | 5
 type AppPage = 'welcome' | 'workspace' | 'all' | 'team' | 'templates' | 'journal'
 type SavedProcess = { id: string; title: string; context: string; transcript: string; sideA: string; sideB: string; analysis: ConflictAnalysis; selectedIndex: number; owner: string; reviewDate: string; updatedAt: string }
+type DecisionTemplate = { id: string; name: string; context: string; transcript: string; updatedAt: string; builtIn?: boolean }
 
 const steps = ['Situation', 'What matters', 'Options', 'Analysis', 'Decision']
 const disagreementLabels = { FACT: 'A fact we can check', VALUE: 'Different priorities', DEFINITION: 'Different meanings', UNKNOWN: 'Something is missing' } as const
@@ -15,6 +16,11 @@ const scenarios = {
   scope: { context: 'Should we cut scope to hit the client deadline?', transcript: 'Priya: Cutting scope protects the deadline and lets us validate the core workflow. A focused delivery is better than a late promise.\n\nLeo: Cutting scope removes the feature that makes the product valuable.\n\nLeo: We should move the deadline rather than deliver something incomplete.' },
   hiring: { context: 'Which candidate should we hire?', transcript: 'Aisha: The experienced candidate can own the role immediately and reduce the risk of missing the quarter.\n\nSam: The fast learner has stronger collaboration signals and will grow with the team.\n\nAisha: We need someone who has already handled this scale.\n\nSam: Adaptability gives us a better long-term fit.' },
 } as const
+const defaultTemplates: DecisionTemplate[] = [
+  { id: 'product-launch', name: 'Product launch', context: scenarios.launch.context, transcript: scenarios.launch.transcript, updatedAt: '2026-01-01T00:00:00.000Z', builtIn: true },
+  { id: 'project-scope', name: 'Project scope', context: scenarios.scope.context, transcript: scenarios.scope.transcript, updatedAt: '2026-01-01T00:00:00.000Z', builtIn: true },
+  { id: 'hiring-choice', name: 'Hiring choice', context: scenarios.hiring.context, transcript: scenarios.hiring.transcript, updatedAt: '2026-01-01T00:00:00.000Z', builtIn: true },
+]
 
 function App() {
   const [page, setPage] = useState<AppPage>('welcome')
@@ -36,6 +42,7 @@ function App() {
   const [copied, setCopied] = useState(false)
   const [title, setTitle] = useState('Untitled decision')
   const [savedProcesses, setSavedProcesses] = useState<SavedProcess[]>([])
+  const [templates, setTemplates] = useState<DecisionTemplate[]>(defaultTemplates)
   const [leftOpen, setLeftOpen] = useState(true)
   const [rightOpen, setRightOpen] = useState(false)
   const [rightWidth, setRightWidth] = useState(440)
@@ -47,6 +54,7 @@ function App() {
 
   useEffect(() => {
     try { setSavedProcesses(JSON.parse(localStorage.getItem('friction-processes') || '[]') as SavedProcess[]) } catch { setSavedProcesses([]) }
+    try { const stored = JSON.parse(localStorage.getItem('friction-templates') || 'null') as DecisionTemplate[] | null; if (stored?.length) setTemplates(stored) } catch { /* Keep the built-in templates. */ }
   }, [])
   useEffect(() => { if (notice) { const timer = window.setTimeout(() => setNotice(''), 2400); return () => window.clearTimeout(timer) } }, [notice])
   useEffect(() => {
@@ -63,6 +71,8 @@ function App() {
     if (!next) return
     setSample(id); setContext(next.context); setTranscript(next.transcript); setAdvancedOpen(false); setError(''); setWarning('')
   }
+  const useTemplate = (template: DecisionTemplate) => { setTitle(template.name); setContext(template.context); setTranscript(template.transcript); setSideA(''); setSideB(''); setAdvancedOpen(false); setSource('idle'); setWarning(''); setError(''); setStep(1); setPage('workspace'); setNotice(`Loaded ${template.name}`) }
+  const saveTemplates = (next: DecisionTemplate[]) => { setTemplates(next); localStorage.setItem('friction-templates', JSON.stringify(next)) }
 
   const analyze = async () => {
     const payload: AnalyzeInput = advancedOpen ? { decision: context, mode: 'perspectives', sideA, sideB } : { decision: context, mode: 'transcript', transcript }
@@ -108,7 +118,7 @@ function App() {
       </aside>
       <main className="workspace" id="top">
       {page === 'welcome' && <Welcome onStart={openWorkspace} />}
-      {page !== 'welcome' && page !== 'workspace' && <LibraryPage page={page} savedProcesses={savedProcesses} onOpen={loadProcess} onStart={openWorkspace} />}
+      {page !== 'welcome' && page !== 'workspace' && <LibraryPage page={page} savedProcesses={savedProcesses} templates={templates} onOpen={loadProcess} onStart={openWorkspace} onUseTemplate={useTemplate} onSaveTemplates={saveTemplates} />}
       {page === 'workspace' && <>
         <div className="workspace-head"><div className="title-block"><input className="process-title" value={title} onChange={(event) => setTitle(event.target.value)} aria-label="Decision process title" /><p>Get clarity on what matters, see your options, and choose with confidence.</p></div><div className="head-actions"><button onClick={saveProcess}><Save size={15} /> Save</button><button onClick={shareProcess}><Share2 size={15} /> Share</button><button aria-label="More actions" onClick={() => setNotice('Use Save to keep this process for later')}><MoreHorizontal size={17} /></button>{!rightOpen && <button className="brief-open" onClick={() => setRightOpen(true)} title="Open decision brief"><PanelRight size={16} /> Open brief</button>}<button className="rail-toggle" onClick={() => setLeftOpen(true)} title="Open navigation"><ChevronRight size={16} /></button></div></div>
         <nav className="step-nav" aria-label="Decision workflow">{steps.map((label, index) => <button key={label} className={step === index + 1 ? 'active' : ''} onClick={() => setStep((index + 1) as Step)}><span>{index + 1}</span>{label}</button>)}</nav>
@@ -137,9 +147,25 @@ function Welcome({ onStart }: { onStart: () => void }) {
   return <section className="welcome-page"><div className="welcome-mark">f</div><span className="welcome-kicker">DECISION CLARITY / 01</span><h1>Make the next decision<br /><em>feel lighter.</em></h1><p>Friction turns conversations, competing priorities, and uncertainty into a clear set of options you can act on.</p><button className="welcome-button" onClick={onStart}>Get started <ArrowRight size={17} /></button><div className="welcome-preview"><div><span>01</span><strong>Paste what is going on</strong><small>Friction finds the decision inside it.</small></div><div><span>02</span><strong>See what matters</strong><small>Rank the forces and compare your options.</small></div><div><span>03</span><strong>Choose with confidence</strong><small>Save a brief you can return to.</small></div></div></section>
 }
 
-function LibraryPage({ page, savedProcesses, onOpen, onStart }: { page: Exclude<AppPage, 'welcome' | 'workspace'>; savedProcesses: SavedProcess[]; onOpen: (saved: SavedProcess) => void; onStart: () => void }) {
+function LibraryPage({ page, savedProcesses, templates, onOpen, onStart, onUseTemplate, onSaveTemplates }: { page: Exclude<AppPage, 'welcome' | 'workspace'>; savedProcesses: SavedProcess[]; templates: DecisionTemplate[]; onOpen: (saved: SavedProcess) => void; onStart: () => void; onUseTemplate: (template: DecisionTemplate) => void; onSaveTemplates: (templates: DecisionTemplate[]) => void }) {
   const copy = { all: ['All decisions', 'Every decision process saved in this browser.'], team: ['Team decisions', 'A calm place to prepare a decision before sharing it with your team.'], templates: ['Templates', 'Start with a clear shape for the decision in front of you.'], journal: ['Journal', 'Private notes for the questions and patterns you want to remember.'] }[page]
-  return <section className="library-page"><div className="library-header"><span className="welcome-kicker">FRICTION WORKSPACE</span><h1>{copy[0]}</h1><p>{copy[1]}</p></div>{page === 'all' && <div className="saved-grid">{savedProcesses.length ? savedProcesses.map((saved) => <button className="saved-card" key={saved.id} onClick={() => { onOpen(saved); onStart() }}><span>{new Date(saved.updatedAt).toLocaleDateString()}</span><strong>{saved.title}</strong><small>{saved.analysis.decisions.length} decision{saved.analysis.decisions.length === 1 ? '' : 's'} found</small><ArrowRight size={16} /></button>) : <div className="empty-state"><FileText size={23} /><h2>No saved decisions yet</h2><p>Give a decision a title and save it from the workspace.</p><button onClick={onStart}>Create your first decision</button></div>}</div>}{page === 'team' && <div className="feature-page"><Users size={29} /><h2>Prepare decisions for a better conversation.</h2><p>Use Friction before a meeting to turn scattered opinions into a shared starting point. Saved processes stay in this browser until you choose to share them.</p><button onClick={onStart}>Start a team decision <ArrowRight size={16} /></button></div>}{page === 'templates' && <div className="template-grid">{['Product launch', 'Hiring choice', 'Project scope', 'Personal change'].map((item, index) => <button key={item} onClick={onStart}><span>0{index + 1}</span><strong>{item}</strong><small>Start with a focused decision prompt.</small><ArrowRight size={16} /></button>)}</div>}{page === 'journal' && <div className="feature-page journal-page"><BookOpen size={29} /><h2>Keep the questions that matter.</h2><textarea placeholder="Write a private note to return to later..." /><button onClick={() => window.localStorage.setItem('friction-journal-note', 'saved')}>Save note</button></div>}</section>
+  return <section className="library-page"><div className="library-header"><span className="welcome-kicker">FRICTION WORKSPACE</span><h1>{copy[0]}</h1><p>{copy[1]}</p></div>{page === 'all' && <div className="saved-grid">{savedProcesses.length ? savedProcesses.map((saved) => <button className="saved-card" key={saved.id} onClick={() => { onOpen(saved); onStart() }}><span>{new Date(saved.updatedAt).toLocaleDateString()}</span><strong>{saved.title}</strong><small>{saved.analysis.decisions.length} decision{saved.analysis.decisions.length === 1 ? '' : 's'} found</small><ArrowRight size={16} /></button>) : <div className="empty-state"><FileText size={23} /><h2>No saved decisions yet</h2><p>Give a decision a title and save it from the workspace.</p><button onClick={onStart}>Create your first decision</button></div>}</div>}{page === 'team' && <div className="feature-page"><Users size={29} /><h2>Prepare decisions for a better conversation.</h2><p>Use Friction before a meeting to turn scattered opinions into a shared starting point. Saved processes stay in this browser until you choose to share them.</p><button onClick={onStart}>Start a team decision <ArrowRight size={16} /></button></div>}{page === 'templates' && <TemplateLibrary templates={templates} onUse={onUseTemplate} onSave={onSaveTemplates} />}{page === 'journal' && <div className="feature-page journal-page"><BookOpen size={29} /><h2>Keep the questions that matter.</h2><textarea placeholder="Write a private note to return to later..." /><button onClick={() => window.localStorage.setItem('friction-journal-note', 'saved')}>Save note</button></div>}</section>
+}
+
+function TemplateLibrary({ templates, onUse, onSave }: { templates: DecisionTemplate[]; onUse: (template: DecisionTemplate) => void; onSave: (templates: DecisionTemplate[]) => void }) {
+  const [editing, setEditing] = useState<DecisionTemplate | null>(null)
+  const [form, setForm] = useState({ name: '', context: '', transcript: '' })
+  const beginCreate = () => { setEditing({ id: crypto.randomUUID(), name: '', context: '', transcript: '', updatedAt: new Date().toISOString() }); setForm({ name: '', context: '', transcript: '' }) }
+  const beginEdit = (template: DecisionTemplate) => { setEditing(template); setForm({ name: template.name, context: template.context, transcript: template.transcript }) }
+  const save = () => {
+    const current = editing
+    if (!current || !form.name.trim() || !form.context.trim() || !form.transcript.trim()) return
+    const next = { ...current, name: form.name.trim(), context: form.context.trim(), transcript: form.transcript.trim(), updatedAt: new Date().toISOString() }
+    onSave(current.builtIn ? templates.map((template) => template.id === current.id ? next : template) : [next, ...templates.filter((template) => template.id !== current.id)])
+    setEditing(null)
+  }
+  const remove = (template: DecisionTemplate) => { if (template.builtIn) return; onSave(templates.filter((item) => item.id !== template.id)) }
+  return <>{<div className="template-toolbar"><div><strong>Your starting points</strong><small>Save the prompts you return to most.</small></div><button className="analyze-button" onClick={beginCreate}><Plus size={15} /> New template</button></div>}<div className="template-grid">{templates.map((template, index) => <article className="template-card" key={template.id}><button className="template-card-main" onClick={() => onUse(template)}><span>{String(index + 1).padStart(2, '0')} {template.builtIn ? 'BUILT IN' : 'YOUR TEMPLATE'}</span><strong>{template.name}</strong><small>{template.context}</small><b>Use template <ArrowRight size={14} /></b></button><div className="template-card-actions"><button onClick={() => beginEdit(template)} title={`Edit ${template.name}`}><Pencil size={14} /> Edit</button>{!template.builtIn && <button onClick={() => remove(template)} title={`Delete ${template.name}`}><Trash2 size={14} /> Delete</button>}</div></article>)}</div>{editing && <div className="template-editor" role="dialog" aria-modal="true" aria-labelledby="template-editor-title"><div className="template-editor-head"><div><span className="welcome-kicker">TEMPLATE EDITOR</span><h2 id="template-editor-title">{editing.name ? 'Edit template' : 'New template'}</h2></div><button onClick={() => setEditing(null)} aria-label="Close template editor"><X size={17} /></button></div><label>Template name<input value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} placeholder="e.g. Difficult conversation" maxLength={60} /></label><label>Decision prompt<input value={form.context} onChange={(event) => setForm({ ...form, context: event.target.value })} placeholder="What decision are you trying to make?" maxLength={240} /></label><label>Starting situation<textarea value={form.transcript} onChange={(event) => setForm({ ...form, transcript: event.target.value })} placeholder="Paste a conversation or describe what is going on..." maxLength={12000} /></label><div className="template-editor-actions"><button className="outline-button" onClick={() => setEditing(null)}>Cancel</button><button className="analyze-button" onClick={save} disabled={!form.name.trim() || !form.context.trim() || !form.transcript.trim()}><Save size={15} /> Save template</button></div></div>}</>
 }
 
 function OptionCard({ option, index, expanded = false }: { option: ConflictAnalysis['decisions'][number]['options'][number]; index: number; expanded?: boolean }) {
