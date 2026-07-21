@@ -64,11 +64,11 @@ flowchart LR
     classDef start fill:#f8eee8,stroke:#d95843,color:#1d211f,stroke-width:2px
     classDef core fill:#fffefa,stroke:#c9c6bf,color:#1d211f
     classDef green fill:#edf3ef,stroke:#4d8f88,color:#1d211f
-    classDef end fill:#1d2926,stroke:#1d2926,color:#fffaf3,stroke-width:2px
+    classDef endNode fill:#1d2926,stroke:#1d2926,color:#fffaf3,stroke-width:2px
     class A start
     class B,C,D,E core
     class F,G,H,I green
-    class J end
+    class J endNode
 ```
 
 *The flow is deliberately progressive: every screen answers one human question before moving to the next.*
