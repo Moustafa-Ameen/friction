@@ -4,182 +4,184 @@
 
 ### Make the next decision feel lighter.
 
-Friction turns messy conversations into ranked decisions, concrete options, and a next question worth answering.
+<p><strong>Friction turns messy conversations into ranked decisions, visible tradeoffs, and a next question worth answering.</strong></p>
+
+<p>
+  <a href="#the-loop">The loop</a> &nbsp; | &nbsp;
+  <a href="#run-it">Run it</a> &nbsp; | &nbsp;
+  <a href="#architecture">Architecture</a> &nbsp; | &nbsp;
+  <a href="#codex--gpt-56">AI build story</a>
+</p>
+
+[![Build](https://img.shields.io/badge/build-passing-4c9b7b?style=for-the-badge&labelColor=1d2926)](https://github.com/Moustafa-Ameen/friction)
+[![Runtime](https://img.shields.io/badge/runtime-GPT--5.6%20Luna-c45b45?style=for-the-badge&labelColor=1d2926)](https://platform.openai.com/)
+[![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20Vite-2f787d?style=for-the-badge&labelColor=1d2926)](https://react.dev/)
+[![Privacy](https://img.shields.io/badge/data-local%20by%20default-8a9b78?style=for-the-badge&labelColor=1d2926)](#privacy)
 
 <br />
 
-[![Build](https://img.shields.io/badge/build-passing-4c9b7b?style=for-the-badge)](https://github.com/Moustafa-Ameen/friction)
-[![GPT-5.6](https://img.shields.io/badge/runtime-GPT--5.6%20Luna-c45b45?style=for-the-badge)](https://platform.openai.com/)
-[![React](https://img.shields.io/badge/frontend-React%20%2B%20Vite-2f787d?style=for-the-badge)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/language-TypeScript-3178c6?style=for-the-badge)](https://www.typescriptlang.org/)
-[![Privacy](https://img.shields.io/badge/data-not%20stored-27302b?style=for-the-badge)](#privacy-by-default)
-
-<br />
-
-**Paste the situation. See what matters. Compare the paths. Decide with more clarity.**
+<img src="assets/friction-loop.svg" alt="Animated Friction decision loop" width="760" />
 
 </div>
 
 <br />
 
-## The problem
+> **A decision system for the moment before the decision.**
+>
+> Paste the raw conversation. Friction finds what is being decided, shows what matters, compares the paths, and gives you a concrete next move.
+
+<table>
+<tr>
+<td width="33%" bgcolor="#f8eee8"><strong>01 / SEE IT</strong><br /><br />Find the real decision inside the noise.</td>
+<td width="33%" bgcolor="#edf3ef"><strong>02 / WEIGH IT</strong><br /><br />Rank importance and compare upside against risk.</td>
+<td width="33%" bgcolor="#f6f1e4"><strong>03 / MOVE IT</strong><br /><br />Save, share, print, and revisit a clear path.</td>
+</tr>
+</table>
+
+## Why Friction exists
 
 Most decisions do not arrive as clean questions. They arrive as a Slack thread, a tense conversation, three competing opinions, or a feeling that nobody has said the real thing out loud.
 
-Friction is built for that messy first moment.
+Friction is built for that messy first moment. It does not decide who is right. It makes the decision inspectable.
 
-It does not pretend to know who is right. It separates the decision from the noise around it, then gives people something practical to work with.
-
-## The product loop
+<div align="center">
 
 ```mermaid
 flowchart LR
-    A[Paste what is going on] --> B[Find the decisions]
-    B --> C[Rank what matters]
-    C --> D[Compare real options]
-    D --> E[Identify the tension]
-    E --> F[Ask the next useful question]
-    F --> G[Save or share a decision brief]
+    A([Paste the mess]) --> B{{Find the decision}}
+    B --> C[/Rank what matters/]
+    C --> D[Compare options]
+    D --> E{What kind of tension?}
+    E -->|FACT| F[Check evidence]
+    E -->|VALUE| G[Name priorities]
+    E -->|DEFINITION| H[Define the word]
+    E -->|UNKNOWN| I[Surface what is missing]
+    F --> J([Choose the next question])
+    G --> J
+    H --> J
+    I --> J
 
-    style A fill:#f8eee8,stroke:#d95843,color:#1d211f
-    style B fill:#fffefa,stroke:#d8d5cd,color:#1d211f
-    style C fill:#fffefa,stroke:#d8d5cd,color:#1d211f
-    style D fill:#edf3ef,stroke:#4d8f88,color:#1d211f
-    style E fill:#fffefa,stroke:#d8d5cd,color:#1d211f
-    style F fill:#edf3ef,stroke:#4d8f88,color:#1d211f
-    style G fill:#27302b,stroke:#27302b,color:#fffaf3
+    classDef start fill:#f8eee8,stroke:#d95843,color:#1d211f,stroke-width:2px
+    classDef core fill:#fffefa,stroke:#c9c6bf,color:#1d211f
+    classDef green fill:#edf3ef,stroke:#4d8f88,color:#1d211f
+    classDef end fill:#1d2926,stroke:#1d2926,color:#fffaf3,stroke-width:2px
+    class A start
+    class B,C,D,E core
+    class F,G,H,I green
+    class J end
 ```
+
+*The flow is deliberately progressive: every screen answers one human question before moving to the next.*
+
+</div>
+
+## The product loop
+
+<table>
+<tr><th>Step</th><th>What the user sees</th><th>Why it matters</th></tr>
+<tr><td><strong>Situation</strong></td><td>A conversation, rough notes, or two perspectives</td><td>No perfect prompt required</td></tr>
+<tr><td><strong>What matters</strong></td><td>Decision drivers and a 0-100 importance score</td><td>Urgency becomes visible without pretending to be certainty</td></tr>
+<tr><td><strong>Options</strong></td><td>Ranked paths with benefits and drawbacks</td><td>The user can compare instead of arguing in circles</td></tr>
+<tr><td><strong>Analysis</strong></td><td>FACT, VALUE, DEFINITION, or UNKNOWN tension</td><td>The disagreement gets a useful category</td></tr>
+<tr><td><strong>Decision</strong></td><td>Owner, review date, brief, PDF, and share action</td><td>Insight becomes something a person can act on</td></tr>
+</table>
+
+### A small, inspectable model
+
+```mermaid
+stateDiagram-v2
+    [*] --> Situation
+    Situation --> WhatMatters: analyze
+    WhatMatters --> Options: see drivers
+    Options --> Analysis: compare paths
+    Analysis --> Decision: choose next question
+    Decision --> Saved: save / share / print
+    Saved --> Situation: revisit later
+```
+
+<details>
+<summary><strong>What Friction does not do</strong></summary>
+
+Friction does not diagnose people, assign blame, decide who is right, or present uncertain claims as facts. It organizes a decision so the people involved can make the judgment.
+
+</details>
 
 ## What makes it different
 
 | Ordinary AI chat | Friction |
 | --- | --- |
-| Answers the last message | Finds the decisions inside the whole situation |
+| Answers the last message | Finds decisions inside the whole situation |
 | Produces one confident paragraph | Shows ranked decisions and competing options |
-| Blurs facts, values, and assumptions | Labels the central tension as `FACT`, `VALUE`, `DEFINITION`, or `UNKNOWN` |
-| Gives generic advice | Produces a specific “what would help?” action |
-| Forgets the decision after the chat | Saves a titled, revisitable decision process locally |
-| Requires a perfect prompt | Accepts a rough conversation or two separate perspectives |
+| Blurs facts, values, and assumptions | Labels the central tension explicitly |
+| Gives generic advice | Produces a specific, checkable next question |
+| Forgets the decision after the chat | Saves a titled process locally for later |
+| Requires a perfect prompt | Accepts a rough conversation or two perspectives |
 
-## A decision, made visible
+## Built for demonstration
 
-Every decision gets a small, inspectable model:
+The app ships with realistic scenarios so a first-time user can understand the product in seconds:
 
-```mermaid
-flowchart TD
-    S[Situation] --> I[Importance score]
-    I --> O[Options]
-    O --> T[Type of tension]
-    T --> H[What would help?]
-    H --> N[Next question]
+<table>
+<tr>
+<td bgcolor="#f8eee8"><strong>Product launch</strong><br />Launch Friday or wait for onboarding fixes?</td>
+<td bgcolor="#edf3ef"><strong>Project scope</strong><br />Cut the feature or move the deadline?</td>
+<td bgcolor="#f6f1e4"><strong>Hiring choice</strong><br />Choose experience or long-term fit?</td>
+</tr>
+<tr>
+<td><strong>Pricing strategy</strong><br />Flat subscription or usage-based pricing?</td>
+<td><strong>Office location</strong><br />Move for collaboration or keep cost stability?</td>
+<td><strong>Website redesign</strong><br />Improve comprehension or protect engineering focus?</td>
+</tr>
+</table>
 
-    I -. scored from .-> F1[Impact]
-    I -. scored from .-> F2[Urgency]
-    I -. scored from .-> F3[Reversibility]
-    I -. scored from .-> F4[Uncertainty]
-```
-
-### Importance score
-
-The score is a prioritization aid, not a truth meter:
-
-```text
-importance = impact + urgency + irreversibility + uncertainty
-```
-
-The model returns a bounded `0-100` score and a plain-English explanation. The interface makes the reasoning visible through the circular score, the tooltip, and the ranked driver list.
-
-### Tension classification
-
-The Analysis tab adds one compact classification instead of burying users in a conflict report:
-
-| Label | Meaning | Example |
-| --- | --- | --- |
-| `FACT` | A disputed claim could be checked | What caused sprint velocity to drop? |
-| `VALUE` | Priorities or definitions of success differ | Is $4M a great outcome or a failure of ambition? |
-| `DEFINITION` | The same important word means different things | What does “clean up” mean, and by when? |
-| `UNKNOWN` | The text does not establish what is missing | What constraint has not been surfaced yet? |
+The interface also gracefully handles manager/report disagreements, roommate disputes, values-based founder decisions, and three-sided family choices.
 
 ## Architecture
 
 ```mermaid
 sequenceDiagram
+    autonumber
     participant U as User
     participant R as React + Vite
-    participant S as Express API
+    participant S as Express /api/analyze
     participant G as GPT-5.6 Luna
     participant Z as Zod
 
     U->>R: Paste conversation or perspectives
-    R->>S: POST /api/analyze
-    S->>G: Structured analysis request
-    G-->>S: Strict JSON response
+    R->>S: POST structured input
+    S->>S: Validate length and required fields
+    S->>G: Request strict JSON analysis
+    G-->>S: Structured response
     S->>Z: Validate response contract
-    Z-->>S: Valid analysis or rejection
-    S-->>R: Analysis + source metadata
-    R-->>U: Ranked workspace + brief preview
+    alt Valid response
+        Z-->>R: Analysis + live source
+    else Invalid response or API failure
+        Z-->>S: Reject safely
+        S-->>R: Local fallback analysis
+    end
+    R-->>U: Workspace, brief, PDF, and share actions
 ```
 
 ### Runtime boundaries
 
 ```text
 Browser
-  - React/Vite UI
-  - local saved decision processes
-  - copy, print, and PDF actions
-  - no API key
+  React/Vite UI, local saved processes, templates, journal notes
+  Copy, native share, print/PDF actions
+  No API key
 
 Server
-  - Express /api/analyze
-  - input length validation
-  - OpenAI Responses API call
-  - strict structured output
-  - Zod validation
-  - local fallback on failure
+  Express /api/analyze
+  Input caps and request validation
+  OpenAI Responses API call
+  Strict structured output + Zod validation
+  Fallback response when live analysis is unavailable
 ```
 
-## The interface
-
-The workspace is organized as a decision process rather than a conversation transcript:
-
-1. **Situation** — paste the raw material.
-2. **What matters** — see ranked drivers and importance scores.
-3. **Options** — compare benefits and drawbacks.
-4. **Analysis** — inspect the tension type and the specific missing evidence.
-5. **Decision** — add an owner, review date, and create a brief.
-
-The left rail contains saved processes, templates, team preparation, and a private journal. The right brief is optional, resizable, printable, and closed by default so it never competes with the primary workflow.
-
-## Try these scenarios
-
-The product includes ready-to-run examples for:
-
-- Product launch timing
-- Project scope and deadlines
-- Hiring choices
-
-It also handles less structured inputs, including:
-
-- Manager/report disagreements
-- Roommate conflicts
-- Values-based founder decisions
-- Three-sided family or relationship decisions
-
-## API
+<details>
+<summary><strong>API contract</strong></summary>
 
 `POST /api/analyze`
-
-### Request
-
-```json
-{
-  "decision": "",
-  "mode": "transcript",
-  "transcript": "Maya wants to launch Friday. Jon says onboarding still breaks for new users."
-}
-```
-
-For two explicit perspectives:
 
 ```json
 {
@@ -190,7 +192,7 @@ For two explicit perspectives:
 }
 ```
 
-### Response shape
+The response is validated before rendering:
 
 ```ts
 type DecisionAnalysis = {
@@ -213,9 +215,9 @@ type DecisionAnalysis = {
 }
 ```
 
-The server rejects empty or oversized input. Model output is requested with a strict JSON schema and validated again with Zod before the browser renders it.
+</details>
 
-## Run it locally
+## Run it
 
 Requirements: **Node.js 20+**
 
@@ -227,7 +229,7 @@ npm.cmd run dev:all
 
 Open `http://127.0.0.1:5173`.
 
-The app runs without an API key using the local fallback. For live analysis, add a capped personal key to `.env`:
+The app runs without an API key using local fallback analysis. For live analysis, add a capped personal key to `.env`:
 
 ```dotenv
 OPENAI_API_KEY=your_key_here
@@ -236,92 +238,101 @@ OPENAI_MAX_OUTPUT_TOKENS=1600
 PORT=8787
 ```
 
-The API key is loaded by Express only. It is never bundled into browser JavaScript.
-
-### Separate processes
+The key is loaded by Express only and is never bundled into browser JavaScript.
 
 ```powershell
+# Separate processes
 npm.cmd run dev
 npm.cmd run dev:server
-```
 
-### Production build
-
-```powershell
+# Production build
 npm.cmd run build
 npm.cmd start
 ```
 
-## Privacy by default
+## Privacy
 
-- Conversations are not written to a database.
-- The browser stores saved decision processes only in its own `localStorage`.
-- The API key stays server-side.
-- Inputs are capped before reaching the model.
-- Copying or printing a decision brief does not create another model request.
+<table>
+<tr><td bgcolor="#edf3ef"><strong>No database</strong><br />Conversations are not written to a database.</td><td bgcolor="#f8eee8"><strong>Local storage</strong><br />Saved decisions, templates, and journal notes stay in this browser.</td></tr>
+<tr><td><strong>Server-side key</strong><br />The API key never enters browser JavaScript.</td><td><strong>No surprise calls</strong><br />Copying or printing a brief does not create another model request.</td></tr>
+</table>
 
-Friction organizes decisions. It does not determine who is right and is not legal, medical, or financial advice.
+Friction organizes decisions. It does not provide legal, medical, or financial advice.
 
 ## Codex + GPT-5.6
 
-### Where GPT-5.6 runs
+```mermaid
+flowchart LR
+    C[Codex<br/>development-time partner] --> A[Architecture]
+    C --> I[Implementation]
+    C --> Q[Debugging + QA]
+    G[GPT-5.6 Luna<br/>runtime reasoning] --> X[Decision extraction]
+    G --> Y[Importance + options]
+    G --> Z[Tension + next question]
+    A --> F((Friction))
+    I --> F
+    Q --> F
+    X --> F
+    Y --> F
+    Z --> F
 
-GPT-5.6 Luna is the runtime reasoning layer. It extracts decisions, ranks importance, generates options, classifies the central tension, and proposes a specific next question.
+    classDef codex fill:#f8eee8,stroke:#d95843,color:#1d211f
+    classDef gpt fill:#edf3ef,stroke:#4d8f88,color:#1d211f
+    classDef product fill:#1d2926,stroke:#1d2926,color:#fffaf3
+    class C,A,I,Q codex
+    class G,X,Y,Z gpt
+    class F product
+```
 
-### Where Codex contributed
+### Codex contributed to
 
-Codex was used as the development-time engineering partner across the build:
+- Reframing the original conflict analyzer into a decision workspace.
+- Designing the React/Vite information architecture and responsive layout.
+- Implementing the Express server boundary so the key stays server-side.
+- Building strict structured-output schemas and Zod validation.
+- Debugging malformed responses, fallback behavior, and mobile layout issues.
+- Implementing saved processes, templates, journal notes, decision sharing, PDF briefs, and resizable navigation.
+- Testing manager/report, roommate, values-based, and three-sided scenarios.
 
-- Reframed the original conflict analyzer into a decision inbox.
-- Designed the React/Vite workspace and five-step information architecture.
-- Implemented the Express server boundary so the API key never reaches the browser.
-- Built strict structured-output schemas and Zod validation.
-- Debugged malformed model responses and fallback behavior.
-- Implemented the responsive layout, saved processes, PDF brief, resizable rails, and local navigation pages.
-- Audited the live analysis flow against manager/report, roommate, values-based, and three-sided scenarios.
+### GPT-5.6 Luna runs at runtime
 
-Codex is not a runtime agent inside Friction. At runtime, GPT-5.6 Luna analyzes the input and the browser renders the validated result.
+GPT-5.6 Luna extracts decisions, ranks importance, generates options, classifies the central tension, and proposes a specific next question. Codex is not represented as a runtime agent inside the product.
 
 ## Quality gates
 
-```text
-Build                         PASS
-Server TypeScript audit       PASS
-Fallback schema validation    PASS
-Strict model response schema  PASS
-API key browser scan          PASS
-Mobile overflow check         PASS
-Saved process reload          PASS
-Brief resize interaction      PASS
-```
+| Check | Result |
+| --- | :---: |
+| Production build | `PASS` |
+| Server TypeScript audit | `PASS` |
+| Fallback schema validation | `PASS` |
+| Strict model response validation | `PASS` |
+| API key browser scan | `PASS` |
+| Mobile overflow check | `PASS` |
+| Saved process reload | `PASS` |
+| Brief resize interaction | `PASS` |
 
 ## Roadmap
 
 ```mermaid
 timeline
     title Friction roadmap
-    MVP : Paste a situation
-        : Rank decisions
-        : Compare options
-        : Generate decision brief
-    Next : Evidence checklist
-         : Better multi-person attribution
-         : Shareable read-only briefs
-    Later : Team workspaces
-          : Decision history and outcomes
-          : Calendar and project-tool integrations
+    Build Week : Situation to decision brief
+               : GPT-5.6 structured analysis
+               : Local templates, journal, and saved processes
+    Next       : Evidence checklist
+               : Better multi-person attribution
+               : Read-only brief links
+    Later      : Team workspaces
+               : Decision outcomes and history
+               : Calendar and project-tool integrations
 ```
 
-The roadmap deliberately leaves authentication, databases, OAuth integrations, and collaboration infrastructure out of the hackathon build. The core decision loop comes first.
-
-## Project status
-
-Friction is a standalone hackathon project built for OpenAI Build Week under the **Work & Productivity** category.
-
-The product is intentionally opinionated: fewer generic sections, clearer labels, explicit uncertainty, and a decision brief that someone can actually use after the conversation ends.
+The roadmap deliberately leaves authentication, databases, OAuth, and collaboration infrastructure out of the hackathon build. The core decision loop comes first.
 
 <div align="center">
 
 ### Less circular debate. More visible decisions.
+
+<sub>Built with React, Express, Zod, GPT-5.6 Luna, and Codex.</sub>
 
 </div>

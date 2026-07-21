@@ -1,0 +1,22 @@
+<svg width="760" height="126" viewBox="0 0 760 126" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">Friction decision loop</title>
+  <desc id="desc">An animated path from situation to options to a clear next question.</desc>
+  <rect width="760" height="126" rx="8" fill="#FBFAF7"/>
+  <path d="M112 63H648" stroke="#D8D5CD" stroke-width="2" stroke-dasharray="5 7"/>
+  <circle cx="112" cy="63" r="29" fill="#F8EEE8" stroke="#D95843" stroke-width="2"/>
+  <circle cx="380" cy="63" r="29" fill="#EDF3EF" stroke="#4D8F88" stroke-width="2"/>
+  <circle cx="648" cy="63" r="29" fill="#1D2926" stroke="#1D2926" stroke-width="2"/>
+  <text x="112" y="68" text-anchor="middle" fill="#C4503D" font-family="Arial, sans-serif" font-size="12" font-weight="700">01</text>
+  <text x="380" y="68" text-anchor="middle" fill="#256872" font-family="Arial, sans-serif" font-size="12" font-weight="700">02</text>
+  <text x="648" y="68" text-anchor="middle" fill="#FFFaf3" font-family="Arial, sans-serif" font-size="12" font-weight="700">03</text>
+  <text x="112" y="111" text-anchor="middle" fill="#4F5D55" font-family="Arial, sans-serif" font-size="11">Situation</text>
+  <text x="380" y="111" text-anchor="middle" fill="#4F5D55" font-family="Arial, sans-serif" font-size="11">What matters</text>
+  <text x="648" y="111" text-anchor="middle" fill="#4F5D55" font-family="Arial, sans-serif" font-size="11">Next question</text>
+  <circle r="5" fill="#D95843">
+    <animateMotion dur="3.6s" repeatCount="indefinite" path="M112 63H648"/>
+  </circle>
+  <circle cx="112" cy="63" r="35" stroke="#D95843" stroke-opacity="0.4" stroke-width="2">
+    <animate attributeName="r" values="31;39;31" dur="3.6s" repeatCount="indefinite"/>
+    <animate attributeName="stroke-opacity" values="0.5;0;0.5" dur="3.6s" repeatCount="indefinite"/>
+  </circle>
+</svg>
